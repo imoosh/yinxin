@@ -1,0 +1,373 @@
+{
+  "info": {
+    "_postman_id": "a8b9c1d2-e3f4-5g6h-7i8j-9k0l1m2n3o4p",
+    "name": "SSL VPN Config Agent API",
+    "description": "SSL VPN Config Agent API接口集合",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "检查服务状态",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{}"
+        },
+        "url": {
+          "raw": "http://localhost:8080/ccm/v1/manage/sslvpn/check-status",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "ccm",
+            "v1",
+            "manage",
+            "sslvpn",
+            "check-status"
+          ]
+        },
+        "description": "检查SSL VPN服务的状态"
+      },
+      "response": []
+    },
+    {
+      "name": "生成默认配置",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{}"
+        },
+        "url": {
+          "raw": "http://localhost:8080/ccm/v1/manage/sslvpn/gendefault-cfg",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "ccm",
+            "v1",
+            "manage",
+            "sslvpn",
+            "gendefault-cfg"
+          ]
+        },
+        "description": "生成或恢复默认配置"
+      },
+      "response": []
+    },
+    {
+      "name": "重启服务",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{}"
+        },
+        "url": {
+          "raw": "http://localhost:8080/ccm/v1/manage/sslvpn/restart-service",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "ccm",
+            "v1",
+            "manage",
+            "sslvpn",
+            "restart-service"
+          ]
+        },
+        "description": "重启SSL VPN服务"
+      },
+      "response": []
+    },
+    {
+      "name": "VPN参数设置",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"port\": 111,\n  \"max-clients\": 1000,\n  \"verb\": 3,\n  \"data-ciphers\": [\n    \"AES-256-GCM\",\n    \"AES-128-GCM\"\n  ],\n  \"push_dns\": \"8.8.8.8\",\n  \"push_route_defalut\": false,\n  \"push_route\": [\n    {\n      \"net\": \"192.168.1.0\",\n      \"mask\": \"255.255.255.0\"\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8080/ccm/v1/manage/sslvpn/set-cfg",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "ccm",
+            "v1",
+            "manage",
+            "sslvpn",
+            "set-cfg"
+          ]
+        },
+        "description": "设置VPN配置参数"
+      },
+      "response": []
+    },
+    {
+      "name": "VPN参数查询",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{}"
+        },
+        "url": {
+          "raw": "http://localhost:8080/ccm/v1/manage/sslvpn/get-cfg",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "ccm",
+            "v1",
+            "manage",
+            "sslvpn",
+            "get-cfg"
+          ]
+        },
+        "description": "获取当前VPN配置参数"
+      },
+      "response": []
+    },
+    {
+      "name": "用户设置",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "[\n  {\n    \"uuid\": \"xx\",\n    \"name\": \"用户名\",\n    \"enable\": true,\n    \"cert\": \"cert base64\",\n    \"cert_DN\":\"证书dn\",\n    \"phone_num\": \"13111111111\",\n    \"bind_ip\":\"ipv4\"\n  }\n]"
+        },
+        "url": {
+          "raw": "http://localhost:8080/ccm/v1/manage/sslvpn/set-user",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "ccm",
+            "v1",
+            "manage",
+            "sslvpn",
+            "set-user"
+          ]
+        },
+        "description": "设置用户信息"
+      },
+      "response": []
+    },
+    {
+      "name": "用户查询",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{}"
+        },
+        "url": {
+          "raw": "http://localhost:8080/ccm/v1/manage/sslvpn/get-user",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "ccm",
+            "v1",
+            "manage",
+            "sslvpn",
+            "get-user"
+          ]
+        },
+        "description": "获取所有用户信息"
+      },
+      "response": []
+    },
+    {
+      "name": "资源设置",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "[\n  {\n    \"uuid\": \"xx\",\n    \"name\": \"资源名称\",\n    \"enable\": true,\n    \"ip\": \"资源ip\"\n  }\n]"
+        },
+        "url": {
+          "raw": "http://localhost:8080/ccm/v1/manage/sslvpn/set-resource",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "ccm",
+            "v1",
+            "manage",
+            "sslvpn",
+            "set-resource"
+          ]
+        },
+        "description": "设置资源信息"
+      },
+      "response": []
+    },
+    {
+      "name": "资源查询",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{}"
+        },
+        "url": {
+          "raw": "http://localhost:8080/ccm/v1/manage/sslvpn/get-resource",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "ccm",
+            "v1",
+            "manage",
+            "sslvpn",
+            "get-resource"
+          ]
+        },
+        "description": "获取所有资源信息"
+      },
+      "response": []
+    },
+    {
+      "name": "权限设置",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"enable\": true,\n  \"auth\": [\n    {\n      \"user_uuid\": \"uuid 1\",\n      \"resource_uuids\": [\n        \"uuid of resouce\",\n        \"uuid of resouce\"\n      ]\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8080/ccm/v1/manage/sslvpn/set-authority",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "ccm",
+            "v1",
+            "manage",
+            "sslvpn",
+            "set-authority"
+          ]
+        },
+        "description": "设置权限规则"
+      },
+      "response": []
+    },
+    {
+      "name": "权限查询",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{}"
+        },
+        "url": {
+          "raw": "http://localhost:8080/ccm/v1/manage/sslvpn/get-authority",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "ccm",
+            "v1",
+            "manage",
+            "sslvpn",
+            "get-authority"
+          ]
+        },
+        "description": "获取所有权限规则"
+      },
+      "response": []
+    }
+  ]
+} 
