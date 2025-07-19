@@ -140,6 +140,7 @@ func SetConfig(input string) (*types.BaseResponse, error) {
 	if err := configManager.GenOpenVPNConfFile(&config); err != nil {
 		// OpenVPN配置生成失败，记录警告但不影响JSON存储
 		fmt.Printf("Warning: failed to generate OpenVPN config: %v\n", err)
+		return newErrorResponse(error_def.ErrInvalidParam, fmt.Sprintf("failed to generate OpenVPN config: %v", err)), nil
 	}
 
 	return &types.BaseResponse{
