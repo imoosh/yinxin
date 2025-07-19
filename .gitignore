@@ -27,7 +27,7 @@ release/
 .DS_Store
 .DS_Store?
 ._*
-.Spotlight-V100
+.spotlight-v100
 .Trashes
 ehthumbs.db
 Thumbs.db
@@ -52,8 +52,3 @@ test/test_app
 
 
 build_tmp
-<<<<<<< HEAD
-=======
-
-!release
->>>>>>> 92bee347dd82a91644d1a7498965526c8d301a00
