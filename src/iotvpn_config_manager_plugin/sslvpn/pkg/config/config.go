@@ -40,13 +40,14 @@ const openVPNConfigTemplate = `# OpenVPN Server Configuration
 port {{ .Port }}
 proto {{ .Proto }}
 dev {{ .Dev }}
-dev-type {{ .DevType }}
 
 # 证书和密钥
 ca {{ .CA }}
 cert {{ .Cert }}
 key {{ .Key }}
-dh {{ .DH }}
+
+dh none
+tls-groups "prime256v1"
 
 # 服务器网络设置
 server {{ .ServerNet }} {{ .ServerMask }}
@@ -58,7 +59,7 @@ duplicate-cn
 {{- end }}
 
 # 客户端配置目录（CCD）
-client-config-dir /etc/openvpn/ccd
+client-config-dir {{ .ClientConfigDir }}
 
 # 网络路由
 {{- if .PushRouteDefault }}
@@ -74,23 +75,14 @@ push "dhcp-option DNS {{ .PushDNS }}"
 {{- end }}
 
 # 加密设置
-{{- if .DataCiphers }}
 data-ciphers {{ join .DataCiphers ":" }}
-{{- end }}
-{{- if .Cipher }}
-cipher {{ .Cipher }}
-{{- end }}
+
 {{- if .Auth }}
 auth {{ .Auth }}
 {{- end }}
 
 # TLS设置
-{{- if .TLSAuth }}
-tls-auth {{ .TLSAuth }} 0
-{{- end }}
-{{- if .TLSCrypt }}
-tls-crypt {{ .TLSCrypt }}
-{{- end }}
+tls-version-min 1.2
 
 # 其他设置
 verb {{ .Verb }}
@@ -101,6 +93,7 @@ explicit-exit-notify {{ .ExplicitExitNotify }}
 username-as-common-name
 {{- end }}
 
+
 # 客户端证书验证
 {{- if .CRL }}
 crl-verify {{ .CRL }}
@@ -108,7 +101,6 @@ crl-verify {{ .CRL }}
 
 # 状态和日志
 status /var/log/openvpn/openvpn-status.log
-log /var/log/openvpn/openvpn.log
 log-append /var/log/openvpn/openvpn.log
 
 # 保持连接
@@ -116,10 +108,8 @@ keepalive 10 120
 persist-key
 persist-tun
 
-# 压缩
-{{- if .Compress }}
-compress {{ .Compress }}
-{{- end }}
+# 禁用压缩（防止VORACLE攻击）
+allow-compression no
 
 # 管理接口
 management localhost 7505
@@ -127,27 +117,24 @@ management localhost 7505
 
 // ConfigTemplate 配置模板数据
 type ConfigTemplate struct {
-	Port       int
-	Proto      string
-	Dev        string
-	DevType    string
-	CA         string
-	Cert       string
-	Key        string
-	DH         string
+	Port  int
+	Proto string
+	Dev   string
+	CA    string
+	Cert  string
+	Key   string
+
 	ServerNet  string
 	ServerMask string
 
 	MaxClients         int
+	ClientConfigDir    string
 	DuplicateCN        bool
 	PushRouteDefault   bool
 	PushRoute          []types.RouteConfig
 	PushDNS            string
 	DataCiphers        []string
-	Cipher             string
 	Auth               string
-	TLSAuth            string
-	TLSCrypt           string
 	Verb               int
 	ExplicitExitNotify int
 	Username           bool
@@ -187,30 +174,29 @@ func (cm *SSLVPNConfigManager) GenerateDefaultConfig() (*types.VPNConfig, error)
 func (cm *SSLVPNConfigManager) generateConfigContent(config *types.VPNConfig) (string, error) {
 	// 准备模板数据，使用固定的证书路径
 	templateData := ConfigTemplate{
-		Port:       config.Port,
-		Proto:      "tcp",
-		Dev:        "tun0",
-		DevType:    "tun",
-		CA:         defines.CommonCACertPath,     // 固定CA路径
-		Cert:       defines.CommonServerCertPath, // 固定服务器证书路径
-		Key:        defines.CommonServerKeyPath,  // 固定服务器私钥路径
+		Port:  config.Port,
+		Proto: "tcp",
+		Dev:   "tun",
+		CA:    defines.CommonCACertPath,     // 固定CA路径
+		Cert:  defines.CommonServerCertPath, // 固定服务器证书路径
+		Key:   defines.CommonServerKeyPath,  // 固定服务器私钥路径
+
 		ServerNet:  config.ServerNet.Net,
 		ServerMask: config.ServerNet.Mask,
 
+		ClientConfigDir:    defines.OpenVPNCCDDir,
 		MaxClients:         config.MaxClients,
 		DuplicateCN:        false,
 		PushRouteDefault:   config.PushRouteDefault,
 		PushRoute:          config.PushRoute,
 		PushDNS:            config.PushDNS,
 		DataCiphers:        config.DataCiphers,
-		Cipher:             "AES-256-GCM",
 		Auth:               "SHA256",
-		TLSCrypt:           "",
 		Verb:               config.Verb,
 		ExplicitExitNotify: 1,
 		Username:           false,
 		CRL:                defines.CommonCRLPath, // 固定CRL路径
-		Compress:           "lz4",
+		Compress:           "",                    // 禁用压缩
 	}
 
 	// 创建模板函数
@@ -235,9 +221,15 @@ func (cm *SSLVPNConfigManager) generateConfigContent(config *types.VPNConfig) (s
 
 // GenOpenVPNConfFile 生成openvpn配置文件
 func (cm *SSLVPNConfigManager) GenOpenVPNConfFile(config *types.VPNConfig) error {
+
 	content, err := cm.generateConfigContent(config)
 	if err != nil {
 		return fmt.Errorf("failed to generate config content: %v", err)
+	}
+
+	// 确保日志目录存在
+	if err := os.MkdirAll("/var/log/openvpn", 0755); err != nil {
+		return fmt.Errorf("failed to create log directory: %v", err)
 	}
 
 	return os.WriteFile(defines.OpenVPNMainPath, []byte(content), 0644)

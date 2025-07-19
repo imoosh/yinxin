@@ -1,0 +1,18 @@
+[Unit]
+Description=OpenVPN service
+After=network.target
+
+[Service]
+Type=simple
+PrivateTmp=true
+Environment="LD_LIBRARY_PATH=/usr/local/openvpn/lib/openvpn:/usr/local/openvpn/lib/tls"
+ExecStart=/usr/local/openvpn/sbin/openvpn --config  /var/lib/iot/sslvpn/openvpn/server.conf
+PIDFile=/run/openvpn.pid
+WorkingDirectory=/var/lib/iot/sslvpn/openvpn/
+User=root
+Group=root
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target

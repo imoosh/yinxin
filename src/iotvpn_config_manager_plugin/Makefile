@@ -19,7 +19,7 @@ all: clean build package
 
 build:
 	CGO_ENABLED=$(CGO_ENABLED) GOOS=$(GOOS) GOARCH=$(GOARCH) \
-		go build -buildmode=c-shared $(LDFLAGS) -o build_tmp/$(BINARY).so main.go lib.go nanomq/nanomq_plugin.go
+		go build -buildmode=c-shared $(LDFLAGS) -o build_tmp/$(BINARY).so main.go lib.go 
 
 
 clean:
