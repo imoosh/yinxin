@@ -25,6 +25,7 @@ func NewCCDManager() *CCDManager {
 
 // UpdateConfigs 更新CCD配置
 func (cm *CCDManager) UpdateConfigs(oldUsers, newUsers []types.User) error {
+
 	// 使用CompareSlice对比用户变化
 	keyFunc := func(user types.User) string {
 		return user.UUID // 使用UUID作为唯一标识
@@ -38,6 +39,12 @@ func (cm *CCDManager) UpdateConfigs(oldUsers, newUsers []types.User) error {
 	}
 
 	same, deleted, added, modified := alg.CompareSlice(oldUsers, newUsers, keyFunc, compareFunc)
+
+	// fmt.Printf
+	// fmt.Printf("CCDManager UpdateConfigs same: %+v\n", same)
+	// fmt.Printf("CCDManager UpdateConfigs deleted: %+v\n", deleted)
+	// fmt.Printf("CCDManager UpdateConfigs added: %+v\n", added)
+	// fmt.Printf("CCDManager UpdateConfigs modified: %+v\n", modified)
 
 	// 处理删除的用户：删除其CCD配置文件
 	for _, user := range deleted {
@@ -69,6 +76,7 @@ func (cm *CCDManager) UpdateConfigs(oldUsers, newUsers []types.User) error {
 
 		// 创建新配置（如果用户启用且有CN）
 		if user.Enable && user.CertCN != "" {
+			fmt.Printf("createCCDConfig user: %+v\n", user)
 			if err := cm.createCCDConfig(user); err != nil {
 				fmt.Printf("Warning: failed to create updated CCD config for user %s (%s): %v\n",
 					user.Name, user.CertCN, err)
@@ -116,11 +124,6 @@ func (cm *CCDManager) createCCDConfig(user types.User) error {
 		config.WriteString(fmt.Sprintf("# 为客户端分配固定IP地址 (subnet拓扑)\n"))
 		config.WriteString(fmt.Sprintf("ifconfig-push %s %s\n\n", user.BindIP, serverNetMask))
 	}
-
-	// 可以添加其他配置，如路由推送等
-	config.WriteString("# 其他配置可以在这里添加\n")
-	config.WriteString("# push \"route 192.168.1.0 255.255.255.0\"\n")
-	config.WriteString("# push \"redirect-gateway def1\"\n")
 
 	// 写入配置文件
 	if err := os.WriteFile(ccdFile, []byte(config.String()), 0644); err != nil {

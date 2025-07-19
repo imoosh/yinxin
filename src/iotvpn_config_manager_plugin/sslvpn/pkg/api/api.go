@@ -196,6 +196,14 @@ func SetUser(input string) (*types.BaseResponse, error) {
 		return newErrorResponse(error_def.ErrInvalidParam, "input cannot be empty"), nil
 	}
 
+	// 获取旧用户信息
+	oldUsers, err := dataStore.GetUsers()
+	if err != nil {
+		// 如果获取旧用户失败，记录警告但不影响用户保存
+		fmt.Printf("Warning: failed to get old users for CCD update: %v\n", err)
+		oldUsers = []types.User{}
+	}
+
 	var users []types.User
 	if err := json.Unmarshal([]byte(input), &users); err != nil {
 		return newErrorResponse(error_def.ErrInvalidParam, fmt.Sprintf("invalid JSON input: %v", err)), nil
@@ -224,16 +232,15 @@ func SetUser(input string) (*types.BaseResponse, error) {
 		return newErrorResponse(error_def.ErrInternal, fmt.Sprintf("failed to save users: %v", err)), nil
 	}
 
-	// 调整OpenVPN CCD配置，对比用户变化并更新配置文件
-	oldUsers, err := dataStore.GetUsers()
+	newUsers, err := dataStore.GetUsers()
 	if err != nil {
-		// 如果获取旧用户失败，记录警告但不影响用户保存
-		fmt.Printf("Warning: failed to get old users for CCD update: %v\n", err)
-		oldUsers = []types.User{}
+		// 如果获取新用户失败，记录警告但不影响用户保存
+		fmt.Printf("Warning: failed to get new users for CCD update: %v\n", err)
+		newUsers = []types.User{}
 	}
 
 	// 更新CCD配置
-	if err := AdjustOpenVPNCCDConfig(oldUsers, users); err != nil {
+	if err := AdjustOpenVPNCCDConfig(oldUsers, newUsers); err != nil {
 		// CCD配置更新失败，记录错误但不影响用户数据保存
 		fmt.Printf("Warning: failed to update CCD configuration: %v\n", err)
 	}
