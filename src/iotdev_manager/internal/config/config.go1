@@ -1,0 +1,81 @@
+package config
+
+import (
+	"fmt"
+	"os"
+	"path/filepath"
+
+	"gopkg.in/yaml.v3"
+)
+
+// Config 应用程序配置结构
+type Config struct {
+	App  AppConfig  `yaml:"app"`
+	Log  LogConfig  `yaml:"log"`
+	DB   DBConfig   `yaml:"db"`
+	MQTT MQTTConfig `yaml:"mqtt"`
+}
+
+// AppConfig 应用程序基本配置
+type AppConfig struct {
+	Name    string `yaml:"name"`
+	Version string `yaml:"version"`
+	Port    int    `yaml:"port"`
+}
+
+// LogConfig 日志配置
+type LogConfig struct {
+	Level   string `yaml:"level"`
+	File    string `yaml:"file"`
+	Console bool   `yaml:"console"`
+}
+
+// DBConfig 数据库配置
+type DBConfig struct {
+	Type     string `yaml:"type"`
+	Host     string `yaml:"host"`
+	Port     int    `yaml:"port"`
+	Username string `yaml:"username"`
+	Password string `yaml:"password"`
+	Database string `yaml:"database"`
+}
+
+type MQTTConfig struct {
+	Broker string `yaml:"broker"`
+	TLS    struct {
+		CaCert     string `yaml:"caCert"`
+		ClientCert string `yaml:"clientCert"`
+		ClientKey  string `yaml:"clientKey"`
+	} `yaml:"tls"`
+	Topic                string `yaml:"topic"`
+	ClientID             string `yaml:"clientID"`
+	Username             string `yaml:"username"`
+	Password             string `yaml:"password"`
+	QoS                  byte   `yaml:"qos"`
+	KeepAlive            int    `yaml:"keepAlive"`
+	ReconnectInterval    int    `yaml:"reconnectInterval"`
+	MaxReconnectAttempts int    `yaml:"maxReconnectAttempts"`
+}
+
+// LoadConfig 从指定路径加载配置文件
+func LoadConfig(configPath string) (*Config, error) {
+	// 获取绝对路径
+	absPath, err := filepath.Abs(configPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get absolute path: %w", err)
+	}
+
+	// 读取配置文件
+	data, err := os.ReadFile(absPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read config file: %w", err)
+	}
+
+	// 解析YAML
+	var config Config
+	if err := yaml.Unmarshal(data, &config); err != nil {
+		return nil, fmt.Errorf("failed to parse config file: %w", err)
+	}
+
+	return &config, nil
+}
