@@ -1,6 +1,5 @@
-_output
 
-refs
+refs/*.tar.gz
 # Binaries for programs and plugins
 *.exe
 *.exe~
@@ -53,3 +52,5 @@ test/test_app
 
 
 build_tmp
+
+!release
