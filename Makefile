@@ -1,7 +1,8 @@
 all:
-	bash ./build/build.sh
+	$(MAKE) -C src/iotvpn_config_manager_plugin
 
 clean:
-	rm -rf _output
+	rm -rf release
+	mkdir -p release
 
 .PHONY: all clean

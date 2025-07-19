@@ -19,31 +19,10 @@ typedef struct { const char *p; ptrdiff_t n; } _GoString_;
 /* Start of preamble from import "C" comments.  */
 
 
-#line 3 "nanomq_plugin.go"
-
-
+#line 3 "lib.go"
 
 #include <stdlib.h>
 #include <string.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
-
-// 定义返回错误的结构体
-typedef struct {
-    char* message;
-    int code;
-} Error;
-
-// 分配内存的辅助函数
-//char* allocate_string(size_t size) {
-    //return (char*)malloc(size);
-//}
-
-//// 释放内存的辅助函数
-//void free_string(char* str) {
-    //free(str);
-//}
 
 #line 1 "cgo-generated-wrapper"
 
@@ -101,14 +80,28 @@ typedef struct { void *data; GoInt len; GoInt cap; } GoSlice;
 extern "C" {
 #endif
 
-extern int nanomq_get_cfg(char* in_json, char* out_json);
-extern int nanomq_set_cfg(char* in_json, char* out_json);
-extern int mqtt_auth_get_cfg(char* in_json, char* out_json);
-extern int mqtt_auth_set_cfg(char* in_json, char* out_json);
-extern int nanomq_start(char* in_json, char* out_json);
-extern int nanomq_stop(char* in_json, char* out_json);
-extern int nanomq_restart(char* in_json, char* out_json);
-extern int nanomq_status(char* in_json, char* out_json);
+extern int sslvpn_get_version(char* in_json, char** out_json);
+extern int sslvpn_check_status(char* in_json, char** out_json);
+extern int sslvpn_gen_default_cfg(char* in_json, char** out_json);
+extern int sslvpn_restart_service(char* in_json, char** out_json);
+extern int sslvpn_set_cfg(char* in_json, char** out_json);
+extern int sslvpn_get_cfg(char* in_json, char** out_json);
+extern int sslvpn_set_user(char* in_json, char** out_json);
+extern int sslvpn_get_user(char* in_json, char** out_json);
+extern int sslvpn_set_resource(char* in_json, char** out_json);
+extern int sslvpn_get_resource(char* in_json, char** out_json);
+extern int sslvpn_set_authority(char* in_json, char** out_json);
+extern int sslvpn_get_authority(char* in_json, char** out_json);
+extern int plugin_set_cert_and_other(char* in_json, char** out_json);
+extern int plugin_get_cert_and_other(char* in_json, char** out_json);
+extern int nanomq_get_cfg(char* in_json, char** out_json);
+extern int nanomq_set_cfg(char* in_json, char** out_json);
+extern int mqtt_auth_get_cfg(char* in_json, char** out_json);
+extern int mqtt_auth_set_cfg(char* in_json, char** out_json);
+extern int nanomq_start(char* in_json, char** out_json);
+extern int nanomq_stop(char* in_json, char** out_json);
+extern int nanomq_restart(char* in_json, char** out_json);
+extern int nanomq_status(char* in_json, char** out_json);
 
 #ifdef __cplusplus
 }

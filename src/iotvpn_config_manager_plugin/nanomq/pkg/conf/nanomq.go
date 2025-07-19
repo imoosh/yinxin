@@ -1,4 +1,4 @@
-package main
+package conf
 
 import (
 	"encoding/json"
@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"gopkg.in/ini.v1"
+    . "iotvpn_config_manager_plugin/nanomq/pkg/log"
 )
 
 type TLSConf struct {

@@ -8,6 +8,8 @@ import "C"
 
 import (
 	"encoding/json"
+	nanomqapi "iotvpn_config_manager_plugin/nanomq/pkg/api"
+	nanomqtypes "iotvpn_config_manager_plugin/nanomq/pkg/types"
 	"iotvpn_config_manager_plugin/sslvpn/pkg/api"
 	"iotvpn_config_manager_plugin/sslvpn/pkg/types"
 )
@@ -105,4 +107,61 @@ func allocateAndSetCString(src string, dst **C.char) {
 		cStr := C.CString(src)
 		*dst = cStr
 	}
+}
+
+func handleNanoMQAPICall(
+	in_json *C.char,
+	out_json **C.char,
+	apiFunc func(string) (*nanomqtypes.BaseResponse, error),
+) C.int {
+	inputStr := ""
+	if in_json != nil {
+		inputStr = C.GoString(in_json)
+	}
+
+	result, _ := apiFunc(inputStr)
+
+	responseJSON, _ := json.Marshal(result)
+	allocateAndSetCString(string(responseJSON), out_json)
+	return C.int(result.Code)
+}
+
+//export nanomq_get_cfg
+func nanomq_get_cfg(in_json *C.char, out_json **C.char) C.int {
+	return handleNanoMQAPICall(in_json, out_json, nanomqapi.GetNanoMQConfig)
+}
+
+//export nanomq_set_cfg
+func nanomq_set_cfg(in_json *C.char, out_json **C.char) C.int {
+	return handleNanoMQAPICall(in_json, out_json, nanomqapi.SetNanoMQConfig)
+}
+
+//export mqtt_auth_get_cfg
+func mqtt_auth_get_cfg(in_json *C.char, out_json **C.char) C.int {
+	return handleNanoMQAPICall(in_json, out_json, nanomqapi.GetMQTTAuthConfig)
+}
+
+//export mqtt_auth_set_cfg
+func mqtt_auth_set_cfg(in_json *C.char, out_json **C.char) C.int {
+	return handleNanoMQAPICall(in_json, out_json, nanomqapi.SetMQTTAuthConfig)
+}
+
+//export nanomq_start
+func nanomq_start(in_json *C.char, out_json **C.char) C.int {
+	return handleNanoMQAPICall(in_json, out_json, nanomqapi.StartNanoMQService)
+}
+
+//export nanomq_stop
+func nanomq_stop(in_json *C.char, out_json **C.char) C.int {
+	return handleNanoMQAPICall(in_json, out_json, nanomqapi.StopNanoMQService)
+}
+
+//export nanomq_restart
+func nanomq_restart(in_json *C.char, out_json **C.char) C.int {
+	return handleNanoMQAPICall(in_json, out_json, nanomqapi.RestartNanoMQService)
+}
+
+//export nanomq_status
+func nanomq_status(in_json *C.char, out_json **C.char) C.int {
+	return handleNanoMQAPICall(in_json, out_json, nanomqapi.GetNanoMQStatus)
 }
