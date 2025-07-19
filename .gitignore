@@ -1,6 +1,6 @@
 _output
 
-refs
+refs/*.tar.gz
 # Binaries for programs and plugins
 *.exe
 *.exe~
