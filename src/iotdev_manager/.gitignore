@@ -1,0 +1,6 @@
+bin/mqttpub
+bin/mqttsub
+bin/iotdev
+bin/iotmgr
+
+release

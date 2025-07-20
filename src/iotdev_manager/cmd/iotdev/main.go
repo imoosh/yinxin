@@ -21,9 +21,9 @@ var (
 func main() {
 	// 创建根命令
 	rootCmd := &cobra.Command{
-		Use:   "iotdev_manager",
-		Short: "iotdev_manager - 一个mqtt订阅程序",
-		Long:  `iotdev_manager 是一个mqtt订阅程序，处理订阅事件`,
+		Use:   "iotdev",
+		Short: "iotdev- 一个模拟iot终端程序,发布mqtt消息",
+		Long:  "iotdev 是一个模拟iot终端程序,发布mqtt消息",
 		Run: func(cmd *cobra.Command, args []string) {
 			// 检查配置文件路径
 			if configPath == "" {
@@ -39,8 +39,8 @@ func main() {
 			// 初始化日志
 			logger := logger.NewLogger(cfg.Log)
 			logger.Info("Application starting...")
-
-            cfg.Print(logger.Info)
+			logger.Info("using config: %s", configPath)
+			cfg.Print(logger.Info)
 
 			// 如果是后台运行模式
 			if daemonMode {
@@ -54,7 +54,7 @@ func main() {
 			}
 
 			// 初始化应用
-			application := app.NewApp(cfg, logger)
+			application := app.NewPubApp(*cfg, logger)
 
 			// 运行应用
 			if err := application.Run(); err != nil {

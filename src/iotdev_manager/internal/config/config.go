@@ -34,6 +34,7 @@ type LogConfig struct {
 type MQTTConfig struct {
 	Broker string `yaml:"broker"`
 	TLS    struct {
+		Enabled    bool   `yaml:"enabled"`
 		CaCert     string `yaml:"caCert"`
 		ClientCert string `yaml:"clientCert"`
 		ClientKey  string `yaml:"clientKey"`
