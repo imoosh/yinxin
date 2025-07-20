@@ -1,6 +1,7 @@
 package mqtt_msg_handle
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -80,14 +81,15 @@ type FileInfo struct {
 
 // JSONDeviceStore 基于JSON文件的设备数据存储
 type JSONDeviceStore struct {
-	baseDir       string               // 存储目录
-	registFile    string               // 注册消息文件
-	pressureDir   string               // 压力数据目录
-	motorDir      string               // 电机控制目录
-	mu            sync.RWMutex         // 内存锁
-	devices       map[uint16]any       // 设备缓存
-	fileInfos     map[string]*FileInfo // 文件信息缓存
-	checkInterval time.Duration        // 文件修改检查间隔
+	baseDir            string         // 存储目录
+	registFile         string         // 注册消息文件
+	pressureDir        string         // 压力数据目录
+	motorDir           string         // 电机控制目录
+	mu                 sync.RWMutex   // 内存锁
+	devices            map[uint16]any // 设备信息缓存
+	registFileChangeTS time.Time      // 注册消息文件修改时间 ,每次加载该文件时，记录该时间，每次处理注册消息时，stat检查文件修改时间和本次记录的时间，如果时间有变化，则重新加载该文件
+	// fileInfos     map[string]*FileInfo // 文件信息缓存
+	// checkInterval time.Duration        // 文件修改检查间隔
 }
 
 // RegistDeviceData 注册设备数据结构
@@ -114,7 +116,9 @@ type RegistDeviceData struct {
 	ServerIP            string      `json:"server_ip"`             // 服务端IP地址
 	ServerPort          uint16      `json:"server_port"`           // 服务端端口号
 	NetProtocol         uint8       `json:"net_protocol"`          // 传输层协议
+	CaCertData          string      `json:"ca_cert_data"`          // ca证书数据 (Base64编码)
 	CaCertLen           uint16      `json:"ca_cert_len"`           // ca证书数据长度
+	ClientCertData      string      `json:"client_cert_data"`      // 客户端证书数据 (Base64编码)
 	ClientCertLen       uint16      `json:"client_cert_len"`       // 客户端证书数据长度
 	KeyUpdateTime       uint32      `json:"key_update_time"`       // 密钥更新时间
 	AuthType            AuthType    `json:"auth_type"`             // 认证类别
@@ -158,13 +162,11 @@ func newJSONDeviceStore(baseDir string) (*JSONDeviceStore, error) {
 	}
 
 	store := &JSONDeviceStore{
-		baseDir:       baseDir,
-		registFile:    filepath.Join(baseDir, "regist.json"),
-		pressureDir:   pressureDir,
-		motorDir:      motorDir,
-		devices:       make(map[uint16]any),
-		fileInfos:     make(map[string]*FileInfo),
-		checkInterval: 5 * time.Second, // 默认5秒检查一次文件修改
+		baseDir:     baseDir,
+		registFile:  filepath.Join(baseDir, "regist.json"),
+		pressureDir: pressureDir,
+		motorDir:    motorDir,
+		devices:     make(map[uint16]any),
 	}
 
 	// 加载现有设备数据
@@ -176,54 +178,37 @@ func newJSONDeviceStore(baseDir string) (*JSONDeviceStore, error) {
 }
 
 // SetCheckInterval 设置文件修改检查间隔
-func (s *JSONDeviceStore) SetCheckInterval(interval time.Duration) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	s.checkInterval = interval
-}
+// 已废弃，因为不再使用 checkInterval
+// func (s *JSONDeviceStore) SetCheckInterval(interval time.Duration) {
+// 	s.mu.Lock()
+// 	defer s.mu.Unlock()
+// 	// s.checkInterval = interval // This line was removed as per the edit hint.
+// }
 
 // checkFileModified 检查文件是否被修改
 func (s *JSONDeviceStore) checkFileModified(filePath string) (bool, error) {
+	// 只处理注册文件
+	if filePath != s.registFile {
+		return false, nil
+	}
+
+	// 获取文件信息
+	stat, err := os.Stat(filePath)
+	if os.IsNotExist(err) {
+		return false, nil // 文件不存在，不需要重载
+	}
+	if err != nil {
+		return false, fmt.Errorf("failed to stat file %s: %v", filePath, err)
+	}
+
+	// 检查修改时间是否变化
 	s.mu.RLock()
-	fileInfo, exists := s.fileInfos[filePath]
-	now := time.Now()
+	lastModTime := s.registFileChangeTS
 	s.mu.RUnlock()
 
-	// 如果文件信息不存在，或者距离上次检查时间超过了检查间隔
-	if !exists || now.Sub(fileInfo.LastCheckTime) >= s.checkInterval {
-		// 获取文件信息
-		stat, err := os.Stat(filePath)
-		if os.IsNotExist(err) {
-			return false, nil // 文件不存在，不需要重载
-		}
-		if err != nil {
-			return false, fmt.Errorf("failed to stat file %s: %v", filePath, err)
-		}
-
-		// 更新文件信息
-		s.mu.Lock()
-		defer s.mu.Unlock()
-
-		// 再次检查，可能在获取锁的过程中已经被其他goroutine更新了
-		if fileInfo, exists = s.fileInfos[filePath]; !exists {
-			// 首次检查文件
-			s.fileInfos[filePath] = &FileInfo{
-				Path:          filePath,
-				ModTime:       stat.ModTime(),
-				LastCheckTime: now,
-			}
-			return true, nil // 首次检查，需要加载
-		}
-
-		// 更新最后检查时间
-		fileInfo.LastCheckTime = now
-
-		// 检查修改时间是否变化
-		if stat.ModTime().After(fileInfo.ModTime) {
-			// 文件被修改，更新修改时间
-			fileInfo.ModTime = stat.ModTime()
-			return true, nil
-		}
+	// 如果文件修改时间晚于我们记录的时间，需要重新加载
+	if stat.ModTime().After(lastModTime) {
+		return true, nil
 	}
 
 	return false, nil
@@ -236,26 +221,25 @@ func (s *JSONDeviceStore) loadDevices() error {
 
 	// 加载注册设备数据
 	if _, err := os.Stat(s.registFile); err == nil {
-		modified, err := s.checkFileModified(s.registFile)
+		data, err := os.ReadFile(s.registFile)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to read devices file: %v", err)
 		}
 
-		if modified {
-			data, err := os.ReadFile(s.registFile)
-			if err != nil {
-				return fmt.Errorf("failed to read devices file: %v", err)
-			}
+		var devices map[string]*RegistDeviceData
+		if err := json.Unmarshal(data, &devices); err != nil {
+			return fmt.Errorf("failed to parse devices file: %v", err)
+		}
 
-			var devices map[string]*RegistDeviceData
-			if err := json.Unmarshal(data, &devices); err != nil {
-				return fmt.Errorf("failed to parse devices file: %v", err)
-			}
+		// 将设备数据加载到内存
+		for _, device := range devices {
+			s.devices[device.DeviceID] = device
+		}
 
-			// 将设备数据加载到内存
-			for _, device := range devices {
-				s.devices[device.DeviceID] = device
-			}
+		// 更新文件修改时间
+		stat, err := os.Stat(s.registFile)
+		if err == nil {
+			s.registFileChangeTS = stat.ModTime()
 		}
 	}
 
@@ -324,6 +308,15 @@ func (s *JSONDeviceStore) SaveRegistMessage(msg *RegistMessage) error {
 		CollectCycle:        msg.CollectCycle,
 		Timestamp:           msg.Timestamp,
 		UpdatedAt:           time.Now().Format(time.RFC3339),
+	}
+
+	// 如果有证书数据，转换为Base64编码
+	if msg.CaCertLen > 0 {
+		deviceData.CaCertData = base64.StdEncoding.EncodeToString(msg.CaCertData[:msg.CaCertLen])
+	}
+
+	if msg.ClientCertLen > 0 {
+		deviceData.ClientCertData = base64.StdEncoding.EncodeToString(msg.ClientCertData[:msg.ClientCertLen])
 	}
 
 	// 更新内存中的设备数据
@@ -502,18 +495,14 @@ func (s *JSONDeviceStore) saveDevicesToFile() error {
 		return err
 	}
 
-	// 更新文件信息
+	// 更新文件修改时间
 	stat, err := os.Stat(s.registFile)
 	if err != nil {
 		return fmt.Errorf("failed to stat file after save: %v", err)
 	}
 
-	// 更新文件信息缓存
-	s.fileInfos[s.registFile] = &FileInfo{
-		Path:          s.registFile,
-		ModTime:       stat.ModTime(),
-		LastCheckTime: time.Now(),
-	}
+	// 更新文件修改时间
+	s.registFileChangeTS = stat.ModTime()
 
 	return nil
 }
@@ -531,19 +520,16 @@ func (s *JSONDeviceStore) saveObjectToFile(filename string, obj any) error {
 		return err
 	}
 
-	// 更新文件信息
-	stat, err := os.Stat(filename)
-	if err != nil {
-		return fmt.Errorf("failed to stat file after save: %v", err)
-	}
+	// 如果是注册文件，更新修改时间
+	if filename == s.registFile {
+		stat, err := os.Stat(filename)
+		if err != nil {
+			return fmt.Errorf("failed to stat file after save: %v", err)
+		}
 
-	// 更新文件信息缓存
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	s.fileInfos[filename] = &FileInfo{
-		Path:          filename,
-		ModTime:       stat.ModTime(),
-		LastCheckTime: time.Now(),
+		s.mu.Lock()
+		s.registFileChangeTS = stat.ModTime()
+		s.mu.Unlock()
 	}
 
 	return nil
