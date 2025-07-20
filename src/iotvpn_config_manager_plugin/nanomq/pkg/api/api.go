@@ -253,7 +253,7 @@ func SetMQTTAuthConfig(input string) (result *types.BaseResponse, err error) {
 func StartNanoMQService(input string) (result *types.BaseResponse, err error) {
 	result = types.NewBaseResponseBAD()
 
-	start_cmd := fmt.Sprintf("nanomq start -d --conf %s --log_file /var/log/nanomq.log", types.NANOMQ_ETC_CONFIG)
+	start_cmd := fmt.Sprintf("nanomq start --old_conf %s", types.NANOMQ_ETC_CONFIG)
 	output, err := exec.Command("/bin/bash", "-c", start_cmd).Output()
 	if err != nil {
 		LogError("NanoMQ start failed: %v: %s\n", err, string(output))
