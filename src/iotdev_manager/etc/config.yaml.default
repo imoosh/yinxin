@@ -2,6 +2,7 @@
 app:
   name: "iotdev_manager"
   version: "1.0.0"
+  port: 8080
 
 # 日志配置
 log:
@@ -12,7 +13,7 @@ log:
 mqtt:
   broker: "tls://192.168.0.36:8883"
   tls:
-    enabled: true
+    enabled: false
     caCert: "/etc/certs/ca.pem"
     clientCert: "/etc/certs/client.pem"
     clientKey: "/etc/certs/client-key.pem"
