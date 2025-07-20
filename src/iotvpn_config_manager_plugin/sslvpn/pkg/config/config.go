@@ -47,7 +47,9 @@ cert {{ .Cert }}
 key {{ .Key }}
 
 dh none
-tls-groups "prime256v1"
+
+# 网络拓扑设置
+topology subnet
 
 # 服务器网络设置
 server {{ .ServerNet }} {{ .ServerMask }}

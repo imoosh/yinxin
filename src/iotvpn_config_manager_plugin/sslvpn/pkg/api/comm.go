@@ -17,6 +17,7 @@ var firewallManager *FirewallManager
 func initFirewallManager() {
 	if firewallManager == nil {
 		firewallManager = NewFirewallManager()
+		firewallManager.Initialize()
 	}
 }
 
@@ -107,11 +108,9 @@ func isBase64(s string) bool {
 func AdjustFirewall(authorities *types.AuthoRuleGet) error {
 	// 初始化防火墙管理器
 	initFirewallManager()
-	//阻塞 暂时屏蔽 后面再调防火墙
-	return nil
 
 	// 调整防火墙规则
-	// return firewallManager.AdjustFirewall(authorities)
+	return firewallManager.AdjustFirewall(authorities)
 }
 
 // 清理防火墙规则
@@ -207,54 +206,100 @@ func ValidateUsers(users []types.User) error {
 		return err
 	}
 
+	// 服务端保留的ip，不允许用户使用
+	if err := validateUserBindIPIsReserved(users); err != nil {
+		return err
+	}
+
 	return nil
 }
 
-// validateUserBindIPsInServerNet 验证用户的bindIP是否在虚拟网段内
-func validateUserBindIPsInServerNet(users []types.User) error {
+// validateUserBindIPIsReserved 网段前两个ip 和 后两个ip 不允许用户使用
+func validateUserBindIPIsReserved(users []types.User) error {
 	// 获取当前的VPN配置以获取虚拟网段信息
 	config, err := dataStore.GetVPNConfig()
 	if err != nil {
-		// 如果无法加载配置，使用默认网段
-		config = &types.VPNConfig{
-			ServerNet: types.ServerNet{
-				Net:  "192.168.1.0",
-				Mask: "255.255.255.0",
-			},
-		}
+		return fmt.Errorf("failed to get VPN config: %v", err)
 	}
 
 	// 解析虚拟网段
 	networkIP := parseIP(config.ServerNet.Net)
-	subnetMask := parseIP(config.ServerNet.Mask)
+	if networkIP == nil {
+		return fmt.Errorf("invalid network address: %s", config.ServerNet.Net)
+	}
 
-	if networkIP == nil || subnetMask == nil {
-		return fmt.Errorf("invalid server network configuration: net=%s, mask=%s",
-			config.ServerNet.Net, config.ServerNet.Mask)
+	subnetMask := parseIP(config.ServerNet.Mask)
+	if subnetMask == nil {
+		return fmt.Errorf("invalid subnet mask: %s", config.ServerNet.Mask)
 	}
 
 	// 计算网段范围
 	networkAddr := ipAnd(networkIP, subnetMask)
-	broadcastAddr := ipOr(networkAddr, ipNot(subnetMask))
 
-	// 验证每个用户的bindIP
+	// 计算网关IP (通常是网络地址+1)
+	gatewayIP := make([]byte, 4)
+	copy(gatewayIP, networkAddr)
+	gatewayIP[3] += 1
+
+	// 计算广播地址
+	broadcastAddr := make([]byte, 4)
+	invertedMask := make([]byte, 4)
+	for i := 0; i < 4; i++ {
+		invertedMask[i] = ^subnetMask[i]
+		broadcastAddr[i] = networkAddr[i] | invertedMask[i]
+	}
+
+	// 检查每个用户的绑定IP
 	for _, user := range users {
-		userIP := parseIP(user.BindIP)
-		if userIP == nil {
-			return fmt.Errorf("invalid bind IP format for user %s: %s", user.Name, user.BindIP)
+		if user.BindIP == "" {
+			continue
 		}
 
-		// 检查IP是否在网段内
-		if !ipInRange(userIP, networkAddr, broadcastAddr) {
-			return fmt.Errorf("user %s bind IP %s is not in server network %s/%s",
-				user.Name, user.BindIP, config.ServerNet.Net, config.ServerNet.Mask)
+		userIP := parseIP(user.BindIP)
+		if userIP == nil {
+			return fmt.Errorf("user %s has invalid IP address: %s", user.Name, user.BindIP)
+		}
+
+		// 检查是否是网关IP
+		if ipEqual(userIP, gatewayIP) {
+			return fmt.Errorf("user %s has IP %s which is the gateway IP (reserved)",
+				user.Name, user.BindIP)
+		}
+
+		// 检查是否是广播IP
+		if ipEqual(userIP, broadcastAddr) {
+			return fmt.Errorf("user %s has IP %s which is the broadcast address (reserved)",
+				user.Name, user.BindIP)
 		}
 	}
 
 	return nil
 }
 
-// parseIP 解析IP地址字符串为字节数组
+// isIPInNetwork 检查IP地址是否在指定的网段内
+func isIPInNetwork(ip, networkAddr, subnetMask []byte) bool {
+	// 计算IP地址的网络部分
+	ipNetwork := ipAnd(ip, subnetMask)
+
+	// 比较IP地址的网络部分是否与网络地址相同
+	return ipEqual(ipNetwork, networkAddr)
+}
+
+// ipEqual 比较两个IP地址是否相等
+func ipEqual(ip1, ip2 []byte) bool {
+	if ip1 == nil || ip2 == nil || len(ip1) != 4 || len(ip2) != 4 {
+		return false
+	}
+
+	for i := 0; i < 4; i++ {
+		if ip1[i] != ip2[i] {
+			return false
+		}
+	}
+	return true
+}
+
+// parseIP 将IP地址字符串解析为字节数组
 func parseIP(ipStr string) []byte {
 	parts := strings.Split(ipStr, ".")
 	if len(parts) != 4 {
@@ -269,10 +314,11 @@ func parseIP(ipStr string) []byte {
 		}
 		ip[i] = byte(num)
 	}
+
 	return ip
 }
 
-// ipAnd 计算两个IP地址的按位与
+// ipAnd 执行两个IP地址的按位与操作
 func ipAnd(ip1, ip2 []byte) []byte {
 	result := make([]byte, 4)
 	for i := 0; i < 4; i++ {
@@ -290,7 +336,7 @@ func ipOr(ip1, ip2 []byte) []byte {
 	return result
 }
 
-// ipNot 计算IP地址的按位取反
+// ipNot 计算IP地址的按位非
 func ipNot(ip []byte) []byte {
 	result := make([]byte, 4)
 	for i := 0; i < 4; i++ {
@@ -299,11 +345,14 @@ func ipNot(ip []byte) []byte {
 	return result
 }
 
-// ipInRange 检查IP是否在指定范围内
+// ipInRange 检查IP地址是否在指定的范围内
 func ipInRange(ip, start, end []byte) bool {
 	for i := 0; i < 4; i++ {
 		if ip[i] < start[i] || ip[i] > end[i] {
 			return false
+		}
+		if ip[i] > start[i] || ip[i] < end[i] {
+			break
 		}
 	}
 	return true
@@ -325,5 +374,47 @@ func findUserByUUID(users []types.User, uuid string) *types.User {
 			return &user
 		}
 	}
+	return nil
+}
+
+// validateUserBindIPsInServerNet 验证用户的bindIP是否在虚拟网段内
+func validateUserBindIPsInServerNet(users []types.User) error {
+	// 获取当前的VPN配置以获取虚拟网段信息
+	config, err := dataStore.GetVPNConfig()
+	if err != nil {
+		return fmt.Errorf("failed to get VPN config: %v", err)
+	}
+
+	// 解析虚拟网段
+	networkIP := parseIP(config.ServerNet.Net)
+	subnetMask := parseIP(config.ServerNet.Mask)
+
+	if networkIP == nil || subnetMask == nil {
+		return fmt.Errorf("invalid server network configuration: net=%s, mask=%s",
+			config.ServerNet.Net, config.ServerNet.Mask)
+	}
+
+	// 计算网段范围
+	networkAddr := ipAnd(networkIP, subnetMask)
+	broadcastAddr := ipOr(networkAddr, ipNot(subnetMask))
+
+	// 验证每个用户的bindIP
+	for _, user := range users {
+		if user.BindIP == "" {
+			continue
+		}
+
+		userIP := parseIP(user.BindIP)
+		if userIP == nil {
+			return fmt.Errorf("invalid bind IP format for user %s: %s", user.Name, user.BindIP)
+		}
+
+		// 检查IP是否在网段内
+		if !ipInRange(userIP, networkAddr, broadcastAddr) {
+			return fmt.Errorf("user %s bind IP %s is not in server network %s/%s",
+				user.Name, user.BindIP, config.ServerNet.Net, config.ServerNet.Mask)
+		}
+	}
+
 	return nil
 }

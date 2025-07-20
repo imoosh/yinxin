@@ -55,7 +55,7 @@ func (sm *ServiceManager) CheckStatus() (bool, bool, bool, error) {
 }
 
 // RestartService 重启服务
-func (sm *ServiceManager) RestartService() error {
+func (sm *ServiceManager) RestartService(cidrNet string) error {
 	// 检查配置文件是否存在
 	if _, err := os.Stat(sm.ConfigPath); err != nil {
 		return fmt.Errorf("config file not found: %s", sm.ConfigPath)
