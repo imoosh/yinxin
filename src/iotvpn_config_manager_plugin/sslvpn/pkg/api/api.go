@@ -4,7 +4,9 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"net"
 	"os"
+	"os/exec"
 	"sync"
 
 	"iotvpn_config_manager_plugin/sslvpn/pkg/config"
@@ -102,7 +104,32 @@ func GenerateDefaultConfig(input string) (*types.BaseResponse, error) {
 func RestartService(input string) (*types.BaseResponse, error) {
 	initOnce.Do(initManagers)
 
-	err := serviceManager.RestartService()
+	//1 启用系统转发 echo 1 > /proc/sys/net/ipv4/ip_forward
+	cmd := exec.Command("sh", "-c", "echo 1 > /proc/sys/net/ipv4/ip_forward")
+	if err := cmd.Run(); err != nil {
+		return newErrorResponse(error_def.ErrInternal, fmt.Sprintf("failed to enable system forwarding: %v", err)), nil
+	}
+
+	//2 获取vpnconfig用于添加NAT规则
+	vpnconfig, err := dataStore.GetVPNConfig()
+	if err != nil {
+		return newErrorResponse(error_def.ErrInternal, err.Error()), nil
+	}
+	//  转换成cidr格式  192.168.1.0 255.255.255.0  -> 192.168.1.0/24
+	cidrNet, err := convertNetmaskToCIDR(vpnconfig.ServerNet.Net, vpnconfig.ServerNet.Mask)
+	if err != nil {
+		return newErrorResponse(error_def.ErrInternal, fmt.Sprintf("failed to convert network to CIDR: %v", err)), nil
+	}
+	//   添加NAT规则
+	err = addNATRule(cidrNet)
+	if err != nil {
+		//   NAT规则添加失败，记录日志但不影响服务重启结果
+		// fmt.Printf("Warning: Failed to add NAT rule for %s: %v\n", cidrNet, err)
+		return newErrorResponse(error_def.ErrInternal, fmt.Sprintf("failed to add NAT rule: %v", err)), nil
+	}
+
+	//3 重启服务
+	err = serviceManager.RestartService(input)
 	if err != nil {
 		return newErrorResponse(error_def.ErrInternal, err.Error()), nil
 	}
@@ -196,6 +223,14 @@ func SetUser(input string) (*types.BaseResponse, error) {
 		return newErrorResponse(error_def.ErrInvalidParam, "input cannot be empty"), nil
 	}
 
+	// 获取旧用户信息
+	oldUsers, err := dataStore.GetUsers()
+	if err != nil {
+		// 如果获取旧用户失败，记录警告但不影响用户保存
+		fmt.Printf("Warning: failed to get old users for CCD update: %v\n", err)
+		oldUsers = []types.User{}
+	}
+
 	var users []types.User
 	if err := json.Unmarshal([]byte(input), &users); err != nil {
 		return newErrorResponse(error_def.ErrInvalidParam, fmt.Sprintf("invalid JSON input: %v", err)), nil
@@ -224,16 +259,15 @@ func SetUser(input string) (*types.BaseResponse, error) {
 		return newErrorResponse(error_def.ErrInternal, fmt.Sprintf("failed to save users: %v", err)), nil
 	}
 
-	// 调整OpenVPN CCD配置，对比用户变化并更新配置文件
-	oldUsers, err := dataStore.GetUsers()
+	newUsers, err := dataStore.GetUsers()
 	if err != nil {
-		// 如果获取旧用户失败，记录警告但不影响用户保存
-		fmt.Printf("Warning: failed to get old users for CCD update: %v\n", err)
-		oldUsers = []types.User{}
+		// 如果获取新用户失败，记录警告但不影响用户保存
+		fmt.Printf("Warning: failed to get new users for CCD update: %v\n", err)
+		newUsers = []types.User{}
 	}
 
 	// 更新CCD配置
-	if err := AdjustOpenVPNCCDConfig(oldUsers, users); err != nil {
+	if err := AdjustOpenVPNCCDConfig(oldUsers, newUsers); err != nil {
 		// CCD配置更新失败，记录错误但不影响用户数据保存
 		fmt.Printf("Warning: failed to update CCD configuration: %v\n", err)
 	}
@@ -474,4 +508,39 @@ func GetCertAndOther(input string) (*types.BaseResponse, error) {
 		Msg:  error_def.GetErrDesc(error_def.ErrOk, ""),
 		Data: result,
 	}, nil
+}
+
+// convertNetmaskToCIDR 将网络地址和子网掩码转换为CIDR格式
+func convertNetmaskToCIDR(network, netmask string) (string, error) {
+	// 解析子网掩码
+	mask := net.IPMask(net.ParseIP(netmask).To4())
+	if mask == nil {
+		return "", fmt.Errorf("invalid netmask: %s", netmask)
+	}
+
+	// 计算CIDR前缀长度
+	ones, _ := mask.Size()
+
+	// 返回CIDR格式
+	return fmt.Sprintf("%s/%d", network, ones), nil
+}
+
+// addNATRule 添加NAT规则
+func addNATRule(cidrNet string) error {
+	// 检查规则是否已存在
+	checkCmd := exec.Command("iptables", "-t", "nat", "-C", "POSTROUTING", "-s", cidrNet, "-j", "MASQUERADE")
+	if checkCmd.Run() == nil {
+		// 规则已存在，不需要重复添加
+		fmt.Printf("NAT rule for %s already exists\n", cidrNet)
+		return nil
+	}
+
+	// 添加NAT规则
+	addCmd := exec.Command("iptables", "-t", "nat", "-A", "POSTROUTING", "-s", cidrNet, "-j", "MASQUERADE")
+	if err := addCmd.Run(); err != nil {
+		return fmt.Errorf("failed to add NAT rule: %v", err)
+	}
+
+	fmt.Printf("Successfully added NAT rule for %s\n", cidrNet)
+	return nil
 }

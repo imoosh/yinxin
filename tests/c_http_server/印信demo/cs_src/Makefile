@@ -11,7 +11,7 @@ OBJS = http_parser.o buff.o ssl.o cJSON.o utils.o
 all: ccmdemon
 
 ccmdemon: $(OBJS) http.o server.o http_json.o sslvpn_http_wrapper.o
-	$(CC) -o $@ $^   $(LDFLAGS) -lev -liotvpn_config_manager_plugin
+	$(CC) -o $@ $^   $(LDFLAGS) -lev -liotvpn_plugin
 
 .c.o:
 	$(CC) -c -o $*.o $(CFLAGS)  $*.c
