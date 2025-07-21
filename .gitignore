@@ -1,6 +1,6 @@
 
 refs/*.tar.gz
-*.tar.gz
+
 # Binaries for programs and plugins
 *.exe
 *.exe~
@@ -54,3 +54,6 @@ test/test_app
 
 
 build_tmp
+
+inspack
+inspack.tar.gz
