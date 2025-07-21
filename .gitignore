@@ -1,5 +1,6 @@
 
 refs/*.tar.gz
+*.tar.gz
 # Binaries for programs and plugins
 *.exe
 *.exe~
