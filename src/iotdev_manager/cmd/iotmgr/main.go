@@ -39,7 +39,7 @@ func main() {
 			// 初始化日志
 			logger := logger.NewLogger(cfg.Log)
 			logger.Info("Application starting...")
-
+            logger.Info("using config: %s", configPath)
             cfg.Print(logger.Info)
 
 			// 如果是后台运行模式

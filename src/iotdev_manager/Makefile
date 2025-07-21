@@ -10,7 +10,8 @@ build: chdir
 	go build -o bin/iotdev  ./cmd/iotdev
 
 clean: chdir
-	rm -rf bin/* release iotmgr*.tar.gz
+	rm -rf bin/mqttpub bin/mqttsub bin/iotmgr bin/iotdev
+	rm -rf release iotmgr*.tar.gz
 
 install: chdir
 	mkdir -p release/bin
@@ -19,8 +20,6 @@ install: chdir
 	cp bin/* release/bin/
 	cp etc/iotmgr.yaml release/etc/
 	cp etc/iotdev.yaml release/etc/
-	cp start-iotdev.sh release/
-	cp start-iotmgr.sh release/
 
 pack: chdir
 	tar -cvzf iotmgr-v1.0.0.tar.gz release --transform='s/^release/iotmgr/g'
