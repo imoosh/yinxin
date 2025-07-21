@@ -16,7 +16,6 @@ clean: chdir
 install: chdir
 	mkdir -p release/bin
 	mkdir -p release/etc
-	mkdir -p release/logs
 	cp bin/* release/bin/
 	cp etc/iotmgr.yaml release/etc/
 	cp etc/iotdev.yaml release/etc/

@@ -6,7 +6,7 @@ app:
 # 日志配置
 log:
   level: "info"  # debug, info, warn, error, fatal
-  file: "logs/iotmgr.log"
+  file: "/var/log/iotmgr.log"
   console: true
 
 mqtt:

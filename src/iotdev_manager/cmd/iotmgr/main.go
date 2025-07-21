@@ -45,7 +45,7 @@ func main() {
 			// 如果是后台运行模式
 			if daemonMode {
 				logger.Info("Starting daemon mode...")
-				err := daemon.StartDaemon()
+				err := daemon.StartDaemon(&cfg.App)
 				if err != nil {
 					logger.Error("Failed to start daemon: %v", err)
 					os.Exit(1)

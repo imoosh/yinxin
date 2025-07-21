@@ -2,6 +2,7 @@ package daemon
 
 import (
 	"fmt"
+	"iotdev_manager/internal/config"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -9,7 +10,7 @@ import (
 )
 
 // StartDaemon 启动守护进程
-func StartDaemon() error {
+func StartDaemon(cfg *config.AppConfig) error {
 	// 获取当前可执行文件路径
 	executable, err := os.Executable()
 	if err != nil {
@@ -49,7 +50,7 @@ func StartDaemon() error {
 	fmt.Printf("Daemon started with PID: %d\n", cmd.Process.Pid)
 
 	// 将PID写入文件
-	pidFile := filepath.Join(wd, "iotdev_manager.pid")
+	pidFile := filepath.Join("/var/run", cfg.Name+".pid")
 	err = os.WriteFile(pidFile, []byte(strconv.Itoa(cmd.Process.Pid)), 0644)
 	if err != nil {
 		fmt.Printf("Warning: failed to write PID file: %v\n", err)
@@ -59,3 +60,4 @@ func StartDaemon() error {
 	os.Exit(0)
 	return nil
 }
+
