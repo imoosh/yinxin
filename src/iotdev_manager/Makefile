@@ -22,7 +22,7 @@ install: chdir
 	cp etc/iotdev.yaml release/etc/
 
 pack: chdir
-	tar -cvzf iotmgr-v1.0.0.tar.gz release --transform='s/^release/iotmgr/g'
+	tar -cvzf iotmgr-v1.0.tar.gz release --transform='s/^release/iotmgr/g'
 
 chdir:
 	cd $(MAKE_DIR)

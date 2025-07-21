@@ -5,7 +5,7 @@ BUILD = `date +%FT%T%z`
 GITHASH = `git rev-parse --short HEAD`
 
 # Directories
-RELEASE_DIR = ../../release
+RELEASE_DIR = release
 
 # Setup LDFLAGS for version injection
 LDFLAGS = -ldflags "-X ${PROJECT_NAME}/version.Version=${VERSION} -X ${PROJECT_NAME}/version.Build=${BUILD} -X ${PROJECT_NAME}/version.GitHash=${GITHASH} -s -w"
@@ -23,14 +23,16 @@ build:
 
 
 clean:
-	rm -f build_tmp/*
-
+	rm -rf build_tmp/* release
 
 # Package release
 package: build
 	@echo "Creating release package..."
 	@mkdir -p $(RELEASE_DIR)/lib $(RELEASE_DIR)/include
+	@mkdir -p release/lib release/include
 	@cp build_tmp/$(BINARY).so $(RELEASE_DIR)/lib/
 	@cp build_tmp/$(BINARY).h $(RELEASE_DIR)/include/
+	@tar -cvzf libiotvpn_plugin-v1.0.tar.gz release --transform='s/^release/libiotvpn_plugin/g'
+
 
 .PHONY: all clean
