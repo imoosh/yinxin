@@ -4,3 +4,5 @@ bin/iotdev
 bin/iotmgr
 
 release
+
+*.tar.gz

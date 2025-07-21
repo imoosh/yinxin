@@ -1,12 +1,12 @@
 # 应用配置
 app:
-  name: "iotdev_manager"
+  name: "iotdev"
   version: "1.0.0"
 
 # 日志配置
 log:
   level: "info"  # debug, info, warn, error, fatal
-  file: "logs/iodev_manager.log"
+  file: "logs/iotdev.log"
   console: true
 
 mqtt:
@@ -17,7 +17,7 @@ mqtt:
     clientCert: "/etc/certs/client.pem"
     clientKey: "/etc/certs/client-key.pem"
   topic: "test/topic"
-  clientID: "iotdev_manager"
+  clientID: "iotdev"
   username: "mqttuser"
   password: "mqttpassword"
   qos: 0

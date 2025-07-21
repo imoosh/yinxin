@@ -27,7 +27,7 @@ func main() {
 		Run: func(cmd *cobra.Command, args []string) {
 			// 检查配置文件路径
 			if configPath == "" {
-				configPath = "etc/config.yaml"
+				configPath = "etc/iotmgr.yaml"
 			}
 
 			// 加载配置
@@ -67,7 +67,7 @@ func main() {
 	}
 
 	// 添加命令行参数
-	rootCmd.Flags().StringVarP(&configPath, "config", "c", "", "配置文件路径 (默认为 configs/config.yaml)")
+	rootCmd.Flags().StringVarP(&configPath, "config", "c", "", "配置文件路径 (默认为 etc/iotmgr.yaml)")
 	rootCmd.Flags().BoolVarP(&daemonMode, "daemon", "d", false, "以后台模式运行")
 
 	// 执行命令

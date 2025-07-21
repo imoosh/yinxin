@@ -14,8 +14,8 @@ iotdev_manager/
 ├── pkg/                 # 可被外部应用程序使用的库代码
 │   └── utils/           # 通用工具函数
 │       └── utils.go     # 工具函数实现
-├── configs/             # 配置文件目录
-│   └── config.yaml      # YAML配置文件
+├── etc/             # 配置文件目录
+│   └──iotmgr.yaml      # YAML配置文件
 ├── go.mod               # Go模块定义
 └── README.md            # 项目说明文档
 
@@ -30,7 +30,7 @@ iotdev_manager/
 ## 使用方法
 
 1. 克隆仓库
-2. 修改 `configs/config.yaml` 配置文件
+2. 修改 `etc/iotmgr.yaml` 配置文件
 3. 运行应用程序：
 
 ```bash

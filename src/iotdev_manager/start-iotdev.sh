@@ -6,4 +6,4 @@ if [ -n "$(pidof iotdev)" ]; then
     exit 1
 fi
 
-./bin/iotdev -c ./etc/config.yaml
+./bin/iotdev -c ./etc/iotdev.yaml

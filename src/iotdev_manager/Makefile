@@ -1,6 +1,6 @@
 MAKE_DIR:= $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 
-all: clean build install
+all: clean build install pack
 
 build: chdir
 	go mod tidy
@@ -10,17 +10,22 @@ build: chdir
 	go build -o bin/iotdev  ./cmd/iotdev
 
 clean: chdir
-	rm -rf bin/* release
+	rm -rf bin/* release iotmgr*.tar.gz
 
 install: chdir
 	mkdir -p release/bin
 	mkdir -p release/etc
 	mkdir -p release/logs
 	cp bin/* release/bin/
-	cp etc/config.yaml release/etc/
-	cp start-iotdev.sh start-iotmgr.sh release/
+	cp etc/iotmgr.yaml release/etc/
+	cp etc/iotdev.yaml release/etc/
+	cp start-iotdev.sh release/
+	cp start-iotmgr.sh release/
+
+pack: chdir
+	tar -cvzf iotmgr-v1.0.0.tar.gz release --transform='s/^release/iotmgr/g'
 
 chdir:
 	cd $(MAKE_DIR)
 
-.PHONY: all clean build install chdir
+.PHONY: all clean build install chdir pack

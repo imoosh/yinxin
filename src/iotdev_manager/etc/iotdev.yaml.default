@@ -1,0 +1,26 @@
+# 应用配置
+app:
+  name: "iotdev"
+  version: "1.0.0"
+
+# 日志配置
+log:
+  level: "info"  # debug, info, warn, error, fatal
+  file: "logs/iotdev.log"
+  console: true
+
+mqtt:
+  broker: "tls://192.168.0.36:8883"
+  tls:
+    enabled: true
+    caCert: "/etc/certs/ca.pem"
+    clientCert: "/etc/certs/client.pem"
+    clientKey: "/etc/certs/client-key.pem"
+  topic: "test/topic"
+  clientID: "iotdev"
+  username: "mqttuser"
+  password: "mqttpassword"
+  qos: 0
+  keepAlive: 60
+  reconnectInterval: 5
+  maxReconnectAttempts: 3
