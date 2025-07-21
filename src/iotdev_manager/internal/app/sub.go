@@ -6,6 +6,7 @@ import (
 	"iotdev_manager/internal/config"
 	"iotdev_manager/internal/logger"
 	"iotdev_manager/internal/mqtt"
+	"iotdev_manager/internal/mqtt_msg_handle"
 	"os"
 	"os/signal"
 	"syscall"
@@ -51,11 +52,12 @@ func (a *SubApp) Run() error {
 	}
 
 	sub.Subscribe(func(data []byte) error {
-        fmt.Printf("接受消息: %s\n", string(data))
-        return nil
-    })
+		fmt.Printf("SubApp 接受消息: %s\n", string(data))
+		mqtt_msg_handle.HandleMessage(mqtt_msg_handle.TopicRegist, data)
+		return nil
+	})
 
-    <-a.ctx.Done() 
+	<-a.ctx.Done()
 
 	return nil
 }

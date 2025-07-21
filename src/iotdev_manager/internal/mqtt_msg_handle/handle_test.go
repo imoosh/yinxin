@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/binary"
+	"encoding/hex"
 	"testing"
 )
 
@@ -58,6 +59,8 @@ func createRegistMessageBytes(deviceID uint16) []byte {
 func TestHandleMessage(t *testing.T) {
 	// 创建测试数据
 	testData := createRegistMessageBytes(1)
+
+	t.Errorf(" 1 testData: %s\n", hex.EncodeToString(testData))
 
 	// 测试处理注册消息
 	if err := HandleMessage(TopicRegist, testData); err != nil {

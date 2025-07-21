@@ -49,11 +49,12 @@ func (a *iotmgrApp) Run() error {
 	}
 
 	sub.Subscribe(func(data []byte) error {
-        fmt.Printf("接受消息: %s\n", string(data))
-        return nil
-    })
+		fmt.Printf("iotmgrApp 接受消息: %s\n", string(data))
 
-    <-a.ctx.Done() 
+		return nil
+	})
+
+	<-a.ctx.Done()
 
 	return nil
 }

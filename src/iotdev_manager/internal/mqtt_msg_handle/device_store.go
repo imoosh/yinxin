@@ -56,6 +56,7 @@ func GetDeviceStore() (DeviceStore, error) {
 	store, err := newJSONDeviceStore(BaseDir)
 	if err != nil {
 		initError = fmt.Errorf("failed to initialize device store: %v", err)
+		fmt.Printf("GetDeviceStore: failed to initialize device store: %v\n", err)
 		return nil, initError
 	}
 	DefaultDeviceStore = store
@@ -395,6 +396,7 @@ func (s *JSONDeviceStore) SaveMessage(topic string, msg any) error {
 		}
 	case TopicMotor:
 		if motorMsg, ok := msg.(*MotorMessage); ok {
+			fmt.Printf("SaveMotorMessage: %+v\n", motorMsg)
 			return s.SaveMotorMessage(motorMsg)
 		}
 	}
