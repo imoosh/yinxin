@@ -14,7 +14,7 @@ import (
 
 // https://github.com/eclipse-paho/paho.golang/blob/master/autopaho/examples/queue/subscribe.go
 
-type SubscribeHandler func([]byte) error
+type SubscribeHandler func(string, []byte) error
 
 type MQTTSubscriber struct {
 	cfg config.MQTTConfig
@@ -27,7 +27,7 @@ type MQTTSubscriber struct {
 
 	lastMsgTime time.Time
 
-	msgChan chan []byte
+	packetChan chan *paho.Publish
 }
 
 func NewMQTTSubscriber(ctx context.Context, cfg *config.MQTTConfig) (*MQTTSubscriber, error) {
@@ -38,7 +38,7 @@ func NewMQTTSubscriber(ctx context.Context, cfg *config.MQTTConfig) (*MQTTSubscr
 	sub.ctx = ctx
 	sub.useMemoryQueue = true
 	sub.lastMsgTime = time.Now()
-	sub.msgChan = make(chan []byte)
+	sub.packetChan = make(chan *paho.Publish)
 
 	serverURL, err := url.Parse(cfg.Broker)
 	if err != nil {
@@ -91,9 +91,7 @@ func (sub *MQTTSubscriber) Connection() (*autopaho.ConnectionManager, error) {
 			ClientID: sub.cfg.ClientID,
 			OnPublishReceived: []func(paho.PublishReceived) (bool, error){
 				func(pr paho.PublishReceived) (bool, error) {
-					message := pr.Packet.Payload
-					sub.msgChan <- message
-					// fmt.Printf("subscribe: received message: %s\n", string(message))
+					sub.packetChan <- pr.Packet
 					return true, nil
 				}},
 			OnClientError: func(err error) { fmt.Printf("subscribe: client error: %s\n", err) },
@@ -123,10 +121,10 @@ waitLoop:
 		case <-sub.ctx.Done():
 			err = sub.ctx.Err()
 			break waitLoop
-		case data:= <-sub.msgChan:
-			fmt.Printf("Received Raw: %v\n", data)
+		case pack := <-sub.packetChan:
+			fmt.Printf("Received Raw: topic: %s, payload: %v\n", pack.Topic, pack.Payload)
 			if fn != nil {
-				fn(data)
+				fn(pack.Topic, pack.Payload)
 			}
 		}
 	}
