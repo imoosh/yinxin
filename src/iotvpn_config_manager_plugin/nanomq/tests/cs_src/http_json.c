@@ -9,7 +9,7 @@
 
 #include "cJSON.h"
 
-#include "libnanomq.h"
+#include "libiotvpn_plugin.h"
 /*
  * http://www.jsonrpc.org/specification
  *
@@ -31,12 +31,12 @@
 #define JRPC_INVALID_PARAMS		-32603
 #define JRPC_INTERNAL_ERROR		-32693
 
-void restart_nanomq_service(struct connection *cnn);
-void get_nanomq_status(struct connection *cnn);
-void get_nanomq_config(struct connection *cnn);
-void set_nanomq_config(struct connection *cnn);
-void get_mqtt_auth_config(struct connection *cnn);
-void set_mqtt_auth_config(struct connection *cnn);
+void nanomq_restart_service(struct connection *cnn);
+void nanomq_check_status(struct connection *cnn);
+void nanomq_get_service_config(struct connection *cnn);
+void nanomq_set_service_config(struct connection *cnn);
+void nanomq_get_auth_config(struct connection *cnn);
+void nanomq_set_auth_config(struct connection *cnn);
 
 static int jrpc_send_error(struct connection* cnn, int code, char* message) {
 
@@ -160,12 +160,12 @@ int main(int argc, char **argv)
 	//route_register(srv, "/v1/login", login);
 	route_register(srv, "/login", login);
 
-    route_register(srv, "/restart_nanomq_service", restart_nanomq_service);
-    route_register(srv, "/get_nanomq_status", get_nanomq_status);
-    route_register(srv, "/get_nanomq_config", get_nanomq_config);
-    route_register(srv, "/set_nanomq_config", set_nanomq_config);
-    route_register(srv, "/get_mqtt_auth_config", get_mqtt_auth_config);
-    route_register(srv, "/set_mqtt_auth_config", set_mqtt_auth_config);
+    route_register(srv, "/nanomq/restart_service", nanomq_restart_service);
+    route_register(srv, "/nanomq/check_status", nanomq_check_status);
+    route_register(srv, "/nanomq/get_service_config", nanomq_get_service_config);
+    route_register(srv, "/nanomq/set_service_config", nanomq_set_service_config);
+    route_register(srv, "/nanomq/get_auth_config", nanomq_get_auth_config);
+    route_register(srv, "/nanomq/set_auth_config", nanomq_set_auth_config);
 	
 	log_i("Listen on 8000...\n");
 	ev_run(loop, 0);
@@ -178,47 +178,59 @@ err:
 }
 
 // restart_nanomq_service 重启nanomq服务
-void restart_nanomq_service(struct connection *cnn) {
-    char send_jsonstr[4096] = {0};
-    int ret = nanomq_restart(NULL, send_jsonstr);
+void nanomq_restart_service(struct connection *cnn) {
+    char *out_json = NULL;
+    int ret = nanomq_restart(NULL, &out_json);
     if (ret != 0) {
         log_e("restart nanomq service failed");
 		jrpc_send_error(cnn, JRPC_INTERNAL_ERROR, "internal error");
-        return;
+        goto EXIT;
     }
 
-	http_response_head(cnn, HTTP_STATUS_OK, strlen(send_jsonstr), NULL);
-	http_response(cnn, send_jsonstr, strlen(send_jsonstr)); 
+	http_response_head(cnn, HTTP_STATUS_OK, strlen(out_json), NULL);
+	http_response(cnn, out_json, strlen(out_json)); 
+
+EXIT:
+    if (out_json)
+        free(out_json);
 }
 
 // get_nanomq_status 获取nanomq状态
-void get_nanomq_status(struct connection *cnn) {
-    char send_jsonstr[4096] = {0};
-    int ret = nanomq_status(NULL, send_jsonstr);
+void nanomq_check_status(struct connection *cnn) {
+    char *out_json = NULL;
+    int ret = nanomq_status(NULL, &out_json);
     if (ret != 0) {
         log_e("get nanomq status failed");
 		jrpc_send_error(cnn, JRPC_INTERNAL_ERROR, "internal error");
-        return;
+        goto EXIT;
     }
 
-	http_response_head(cnn, HTTP_STATUS_OK, strlen(send_jsonstr), NULL);
-	http_response(cnn, send_jsonstr, strlen(send_jsonstr)); 
+	http_response_head(cnn, HTTP_STATUS_OK, strlen(out_json), NULL);
+	http_response(cnn, out_json, strlen(out_json)); 
+    
+EXIT:
+    if (out_json)
+        free(out_json);
 }
 
-void get_nanomq_config(struct connection *cnn) {
-    char send_jsonstr[4096] = {0};
-    int ret = nanomq_get_cfg(NULL, send_jsonstr);
+void nanomq_get_service_config(struct connection *cnn) {
+    char *out_json = NULL;
+    int ret = nanomq_get_cfg(NULL, &out_json);
     if (ret != 0) {
         log_e("get nanomq config failed");
 		jrpc_send_error(cnn, JRPC_INTERNAL_ERROR, "internal error");
-        return;
+        goto EXIT;
     }
 
-	http_response_head(cnn, HTTP_STATUS_OK, strlen(send_jsonstr), NULL);
-	http_response(cnn, send_jsonstr, strlen(send_jsonstr)); 
+	http_response_head(cnn, HTTP_STATUS_OK, strlen(out_json), NULL);
+	http_response(cnn, out_json, strlen(out_json)); 
+
+EXIT:
+    if (out_json) 
+        free(out_json);
 }
 
-void set_nanomq_config(struct connection *cnn) {
+void nanomq_set_service_config(struct connection *cnn) {
     struct http_str *ctype = http_get_header(cnn,"Content-Type");
     struct http_str *clen = http_get_header(cnn,"Content-Length");
  
@@ -246,11 +258,11 @@ void set_nanomq_config(struct connection *cnn) {
 	}
 
 	char *in_json = cJSON_Print(root);
-    char out_json[4096] = {0};
+    char *out_json = NULL;
 #ifdef DEBUG	
 	printf("Valid JSON Received:\n%s\n", in_json);
 #endif
-    int ret = nanomq_set_cfg(in_json, out_json);
+    int ret = nanomq_set_cfg(in_json, &out_json);
     if (ret != 0) {
         log_e("set nanomq config failed");
 		jrpc_send_error(cnn, JRPC_INTERNAL_ERROR, "internal error");
@@ -263,25 +275,30 @@ void set_nanomq_config(struct connection *cnn) {
 EXIT:
     if (in_json) 
         free(in_json);
+    if (out_json) 
+        free(out_json);
     if (root)
         cJSON_Delete(root);
 }
 
-void get_mqtt_auth_config(struct connection *cnn) {
-    printf("===========\n");
-    char send_jsonstr[4096] = {0};
-    int ret = mqtt_auth_get_cfg(NULL, send_jsonstr);
+void nanomq_get_auth_config(struct connection *cnn) {
+    char *out_json = NULL;
+    int ret = mqtt_auth_get_cfg(NULL, &out_json);
     if (ret != 0) {
         log_e("get mqttauth config failed");
 		jrpc_send_error(cnn, JRPC_INTERNAL_ERROR, "internal error");
-        return;
+        goto EXIT;
     }
 
-	http_response_head(cnn, HTTP_STATUS_OK, strlen(send_jsonstr), NULL);
-	http_response(cnn, send_jsonstr, strlen(send_jsonstr)); 
+	http_response_head(cnn, HTTP_STATUS_OK, strlen(out_json), NULL);
+	http_response(cnn, out_json, strlen(out_json)); 
+
+EXIT:
+    if (out_json)
+        free(out_json);
 }
 
-void set_mqtt_auth_config(struct connection *cnn) {
+void nanomq_set_auth_config(struct connection *cnn) {
     struct http_str *ctype = http_get_header(cnn,"Content-Type");
     struct http_str *clen = http_get_header(cnn,"Content-Length");
  
@@ -309,11 +326,11 @@ void set_mqtt_auth_config(struct connection *cnn) {
 	}
 
 	char *in_json = cJSON_Print(root);
-    char out_json[4096] = {0};
+    char *out_json = NULL;
 #ifdef DEBUG	
 	printf("Valid JSON Received:\n%s\n", in_json);
 #endif
-    int ret = mqtt_auth_set_cfg(in_json, out_json);
+    int ret = mqtt_auth_set_cfg(in_json, &out_json);
     if (ret != 0) {
         log_e("set mqttauth config failed");
 		jrpc_send_error(cnn, JRPC_INTERNAL_ERROR, "internal error");
@@ -326,6 +343,8 @@ void set_mqtt_auth_config(struct connection *cnn) {
 EXIT:
     if (in_json) 
         free(in_json);
+    if (out_json)
+        free(out_json);
     if (root)
         cJSON_Delete(root);
 }

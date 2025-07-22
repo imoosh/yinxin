@@ -28,14 +28,18 @@ typedef struct {
 import "C"
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	. "iotvpn_config_manager_plugin/nanomq/pkg/conf"
 	. "iotvpn_config_manager_plugin/nanomq/pkg/log"
 	"iotvpn_config_manager_plugin/nanomq/pkg/types"
-	"os"
 	"os/exec"
 )
 
+var (
+	errNanoMQIsOK       = errors.New("NanoMQ is OK")
+	errNanoMQIsAbnarmal = errors.New("NanoMQ is abnormal")
+)
 
 func GetNanoMQConfig(input string) (result *types.BaseResponse, err error) {
 	result = types.NewBaseResponseBAD()
@@ -253,10 +257,18 @@ func SetMQTTAuthConfig(input string) (result *types.BaseResponse, err error) {
 func StartNanoMQService(input string) (result *types.BaseResponse, err error) {
 	result = types.NewBaseResponseBAD()
 
-	start_cmd := fmt.Sprintf("nanomq start --old_conf %s", types.NANOMQ_ETC_CONFIG)
-	output, err := exec.Command("/bin/bash", "-c", start_cmd).Output()
-	if err != nil {
-		LogError("NanoMQ start failed: %v: %s\n", err, string(output))
+	start_cmd := fmt.Sprintf("nanomq start --old_conf %s &", types.NANOMQ_ETC_CONFIG)
+	/*
+		output, err := exec.Command("/bin/bash", "-c", start_cmd).Output()
+		if err != nil {
+			LogError("NanoMQ start failed: %v: %s\n", err, string(output))
+			result.Message = fmt.Sprintf("NanoMQ start failed: %v", err)
+			return
+		}
+	*/
+	cmd := exec.Command("/bin/bash", "-c", start_cmd)
+	if err = cmd.Start(); err != nil {
+		LogError("NanoMQ start failed: %v\n", err)
 		result.Message = fmt.Sprintf("NanoMQ start failed: %v", err)
 		return
 	}
@@ -290,33 +302,24 @@ func RestartNanoMQService(input string) (*types.BaseResponse, error) {
 }
 
 func GetNanoMQStatus(input string) (result *types.BaseResponse, err error) {
-	result = types.NewBaseResponseBAD()
-
-	// 读取nanomq.pid，获取pid
-	pid1, err := os.ReadFile(types.NANOMQ_PID_FILE)
-	if err != nil {
-		LogError("NanoMQ is abnormal: read '%s' error: %v\n", types.NANOMQ_PID_FILE, err)
-		result.Message = fmt.Sprintf("NanoMQ is abnormal")
-		return
-	}
+	result = types.NewBaseResponseOK()
+	result.Result = map[string]bool{"service_status": false}
 
 	// 执行pidof命令，获取pid
-	pid2, err := exec.Command("/bin/bash", "-c", "pidof nanomq").Output()
+	pid, err := exec.Command("/bin/bash", "-c", "pidof nanomq").Output()
 	if err != nil {
 		LogError("NanoMQ is abnormal: exec '%s' error: %v\n", "pidof nanomq", err)
-		result.Message = fmt.Sprintf("NanoMQ is abnormal")
+		result.Message = errNanoMQIsAbnarmal.Error()
 		return
 	}
-
-	// 比较二者是否一致
-	if len(pid1) == 0 || len(pid2) == 0 || string(pid1) != string(pid2) {
-		LogError("NanoMQ is abnormal: nanomq.pid=%s, pidof(nanomq)=%s\n", string(pid1), string(pid2))
-		result.Message = fmt.Sprintf("NanoMQ is abnormal")
+	if len(pid) == 0 {
+		LogError("NanoMQ is abnormal: pidof(nanomq) is null\n")
+		result.Message = errNanoMQIsAbnarmal.Error()
 		return
 	}
-	LogDebug("NanoMQ is OK")
+	LogDebug(errNanoMQIsOK.Error())
 
-	result = types.NewBaseResponseOK()
+	result.Result = map[string]bool{"service_status": true}
 
 	return
 }
