@@ -48,8 +48,8 @@ func (a *iotmgrApp) Run() error {
 		return err
 	}
 
-	sub.Subscribe(func(data []byte) error {
-		fmt.Printf("iotmgrApp 接受消息: %s\n", string(data))
+	sub.Subscribe(func(topic string, data []byte) error {
+        fmt.Printf("iotmgrApp 接受消息: topic: %s, %s\n", topic, string(data))
 
 		return nil
 	})

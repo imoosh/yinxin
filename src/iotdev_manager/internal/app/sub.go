@@ -51,8 +51,8 @@ func (a *SubApp) Run() error {
 		return err
 	}
 
-	sub.Subscribe(func(data []byte) error {
-		fmt.Printf("SubApp 接受消息: %s\n", string(data))
+	sub.Subscribe(func(topic string, data []byte) error {
+        fmt.Printf("SubApp 接受消息: topic: %s, %s\n", topic, string(data))
 		mqtt_msg_handle.HandleMessage(mqtt_msg_handle.TopicRegist, data)
 		return nil
 	})
