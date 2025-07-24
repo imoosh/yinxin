@@ -1,5 +1,5 @@
-#ifndef __SSLVPN_HTTP_CB_H__
-#define __SSLVPN_HTTP_CB_H__
+#ifndef __LIBIOTVPN_PLUGIN_WRAPPER_H__
+#define __LIBIOTVPN_PLUGIN_WRAPPER_H__
 
 #ifdef __cplusplus
 extern "C" {
@@ -51,6 +51,20 @@ void sslvpn_set_authority_wrapper(struct connection *cnn);
 
 // sslvpn_get_authority 获取权限
 void sslvpn_get_authority_wrapper(struct connection *cnn);
+
+// nanomq =======////////////////////
+void nanomq_restart_service(struct connection *cnn);
+void nanomq_check_status(struct connection *cnn);
+void nanomq_get_service_config(struct connection *cnn);
+void nanomq_set_service_config(struct connection *cnn);
+void nanomq_get_auth_config(struct connection *cnn);
+void nanomq_set_auth_config(struct connection *cnn);
+
+
+
+//iot设备管理
+void iotdevmgr_get_iot_wrapper(struct connection *cnn);
+void iotdevmgr_del_iot_wrapper(struct connection *cnn);
 
 #ifdef __cplusplus
 }

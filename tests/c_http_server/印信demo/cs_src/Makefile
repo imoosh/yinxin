@@ -10,7 +10,7 @@ LDFLAGS += -L../../lib
 OBJS = http_parser.o buff.o ssl.o cJSON.o utils.o
 all: ccmdemon
 
-ccmdemon: $(OBJS) http.o server.o http_json.o sslvpn_http_wrapper.o
+ccmdemon: $(OBJS) http.o server.o http_json.o libiotvpn_plugin_wrapper.o
 	$(CC) -o $@ $^   $(LDFLAGS) -lev -liotvpn_plugin
 
 .c.o:

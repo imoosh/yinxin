@@ -8,8 +8,12 @@ import "C"
 
 import (
 	"encoding/json"
+	iotdev_manager_api "iotvpn_config_manager_plugin/iotdev_manager_plugin/pkg/api"
+	iotdev_manager_types "iotvpn_config_manager_plugin/iotdev_manager_plugin/pkg/types"
 	nanomqapi "iotvpn_config_manager_plugin/nanomq/pkg/api"
+
 	nanomqtypes "iotvpn_config_manager_plugin/nanomq/pkg/types"
+
 	"iotvpn_config_manager_plugin/sslvpn/pkg/api"
 	"iotvpn_config_manager_plugin/sslvpn/pkg/types"
 )
@@ -164,4 +168,31 @@ func nanomq_restart(in_json *C.char, out_json **C.char) C.int {
 //export nanomq_status
 func nanomq_status(in_json *C.char, out_json **C.char) C.int {
 	return handleNanoMQAPICall(in_json, out_json, nanomqapi.GetNanoMQStatus)
+}
+
+func handleIotManagerAPICall(
+	in_json *C.char,
+	out_json **C.char,
+	apiFunc func(string) (*iotdev_manager_types.BaseResponse, error),
+) C.int {
+	inputStr := ""
+	if in_json != nil {
+		inputStr = C.GoString(in_json)
+	}
+
+	result, _ := apiFunc(inputStr)
+
+	responseJSON, _ := json.Marshal(result)
+	allocateAndSetCString(string(responseJSON), out_json)
+	return C.int(result.Code)
+}
+
+//export iotdevmgr_get_iot
+func iotdevmgr_get_iot(in_json *C.char, out_json **C.char) C.int {
+	return handleIotManagerAPICall(in_json, out_json, iotdev_manager_api.GetIot)
+}
+
+//export iotdevmgr_del_iot
+func iotdevmgr_del_iot(in_json *C.char, out_json **C.char) C.int {
+	return handleIotManagerAPICall(in_json, out_json, iotdev_manager_api.DeleteIot)
 }
