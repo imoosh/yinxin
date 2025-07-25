@@ -86,18 +86,18 @@ void plugin_set_cert_and_other_wrapper(struct connection *cnn)
     if (ctype == NULL) {
         return;
     }
-    ascii_dump("Content-Type", (char* )ctype->at, ctype->len);
+    //ascii_dump("Content-Type", (char* )ctype->at, ctype->len);
 
     if (clen == NULL) {
         return;
     }
-    ascii_dump("Content-Length", (char* )clen->at, clen->len);
+    //ascii_dump("Content-Length", (char* )clen->at, clen->len);
 
     struct http_str *body = &cnn->req.body;
     if (body == NULL) {
         return;
     }
-    ascii_dump("Body", (char* )body->at, body->len);
+    //ascii_dump("Body", (char* )body->at, body->len);
 
     cJSON *root = cJSON_ParseWithLength(body->at, body->len);
     if (root == NULL) {
@@ -114,6 +114,7 @@ void plugin_set_cert_and_other_wrapper(struct connection *cnn)
     int ret = plugin_set_cert_and_other(in_json, &out_json);
     if (ret != 0) {
         log_e("set cert and other failed");
+        log_e("out_json=%s", out_json);
         jrpc_send_error(cnn, JRPC_INTERNAL_ERROR, "internal error");
         FREE_ONCE(out_json);
         goto EXIT;
@@ -268,9 +269,11 @@ void sslvpn_set_user_wrapper(struct connection *cnn) {
         FREE_ONCE(out_json);
         goto EXIT;
     }
+  
 
     http_response_head(cnn, HTTP_STATUS_OK, strlen(out_json), NULL);
-    http_response(cnn, out_json, strlen(out_json)); 
+    http_response(cnn, out_json, strlen(out_json));
+
     FREE_ONCE(out_json);
 
 EXIT:

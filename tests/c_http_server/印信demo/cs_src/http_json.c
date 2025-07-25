@@ -163,12 +163,12 @@ int main(int argc, char **argv)
 	route_register(srv, "/ccm/v1/manage/plugin/get-cert", plugin_get_cert_and_other_wrapper);
 
 
-	route_register(srv, "/nanomq/restart_service", nanomq_restart_service);
-    route_register(srv, "/nanomq/check_status", nanomq_check_status);
-    route_register(srv, "/nanomq/get_service_config", nanomq_get_service_config);
-    route_register(srv, "/nanomq/set_service_config", nanomq_set_service_config);
-    route_register(srv, "/nanomq/get_auth_config", nanomq_get_auth_config);
-    route_register(srv, "/nanomq/set_auth_config", nanomq_set_auth_config);
+	route_register(srv, "/ccm/v1/manage/nanomq/restart_service", nanomq_restart_service);
+    route_register(srv, "/ccm/v1/manage/nanomq/check_status", nanomq_check_status);
+    route_register(srv, "/ccm/v1/manage/nanomq/get_service_config", nanomq_get_service_config);
+    route_register(srv, "/ccm/v1/manage/nanomq/set_service_config", nanomq_set_service_config);
+    route_register(srv, "/ccm/v1/manage/nanomq/get_auth_config", nanomq_get_auth_config);
+    route_register(srv, "/ccm/v1/manage/nanomq/set_auth_config", nanomq_set_auth_config);
 
 
 
