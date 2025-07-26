@@ -17,3 +17,26 @@ echo "/usr/local/lib64" > /etc/ld.so.conf.d/nanomq.conf
 ldconfig
 
 ln -sf /usr/local/etc/nanomq_old.conf /etc/nanomq_old.conf
+
+
+# install openvpn service
+echo '[Unit]
+Description=OpenVPN service
+After=network.target
+
+[Service]
+Type=simple
+PrivateTmp=true
+
+ExecStart=/usr/local/sbin/openvpn --config  /var/lib/iot/sslvpn/openvpn/server.conf
+PIDFile=/run/openvpn.pid
+WorkingDirectory=/var/lib/iot/sslvpn/openvpn/
+User=root
+Group=root
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target' > /usr/lib/systemd/system/openvpn.service
+
+systemctl daemon-reload 
