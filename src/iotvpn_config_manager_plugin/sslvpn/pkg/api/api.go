@@ -436,8 +436,25 @@ func SetCertAndOther(input string) (*types.BaseResponse, error) {
 		return newErrorResponse(error_def.ErrInvalidParam, fmt.Sprintf("validation failed: %v", err)), nil
 	}
 
+	//允许只传某些字段，如果缺失，在这里补上
+	if certManagerJson.CA == "" || certManagerJson.Cert == "" || certManagerJson.Key == "" || certManagerJson.Crl == "" {
+		saved, _ := certificateManager.GetAll()
+		if certManagerJson.CA == "" {
+			certManagerJson.CA = saved.CA
+		}
+		if certManagerJson.Cert == "" {
+			certManagerJson.Cert = saved.Cert
+		}
+		if certManagerJson.Key == "" {
+			certManagerJson.Key = saved.Key
+		}
+		if certManagerJson.Crl == "" {
+			certManagerJson.Crl = saved.Crl
+		}
+	}
+
 	if err := certificateManager.ParseAll(&certManagerJson); err != nil {
-		return newErrorResponse(error_def.ErrInvalidCert, fmt.Sprintf("failed to parse certificate: %v", err)), nil
+		return newErrorResponse(error_def.ErrInvalidParam, fmt.Sprintf("failed to parse certificate: %v", err)), nil
 	}
 
 	//保存
@@ -467,27 +484,28 @@ func SetCertAndOther(input string) (*types.BaseResponse, error) {
 
 */
 func GetCertAndOther(input string) (*types.BaseResponse, error) {
+	var (
+		caBase64   string
+		certBase64 string
+		crlBase64  string
+	)
+
 	initOnce.Do(initManagers)
 
 	ca, err := os.ReadFile(certificateManager.CAPath)
-	if err != nil {
-		return newErrorResponse(error_def.ErrNotFound, fmt.Sprintf("failed to get ca: %v", err)), nil
+	if err == nil {
+		caBase64 = base64.StdEncoding.EncodeToString(ca)
 	}
 
 	cert, err := os.ReadFile(certificateManager.CertPath)
-	if err != nil {
-		return newErrorResponse(error_def.ErrNotFound, fmt.Sprintf("failed to get cert: %v", err)), nil
+	if err == nil {
+		certBase64 = base64.StdEncoding.EncodeToString(cert)
 	}
 
 	crl, err := os.ReadFile(certificateManager.CrlPath)
-	if err != nil {
-		return newErrorResponse(error_def.ErrNotFound, fmt.Sprintf("failed to get crl: %v", err)), nil
+	if err == nil {
+		crlBase64 = base64.StdEncoding.EncodeToString(crl)
 	}
-
-	// 将文件内容转为base64编码
-	caBase64 := base64.StdEncoding.EncodeToString(ca)
-	certBase64 := base64.StdEncoding.EncodeToString(cert)
-	crlBase64 := base64.StdEncoding.EncodeToString(crl)
 
 	// 按照注释要求的格式创建返回结果
 	result := map[string]string{

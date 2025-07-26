@@ -104,9 +104,15 @@ func isValidCRL(b64Data string) bool {
 		return false
 	}
 
-	_, err = x509.ParseCRL(data)
-	if err != nil {
-		return false
+	//可能有三种形式  der  pem  derBase64
+
+	if data[0] == 'M' {
+		data, err = base64.StdEncoding.DecodeString(string(data))
+		if err != nil {
+			return false
+		}
 	}
-	return true
+
+	_, err = x509.ParseCRL(data)
+	return err == nil
 }

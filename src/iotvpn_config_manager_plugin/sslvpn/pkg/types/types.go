@@ -101,11 +101,11 @@ type AuthRuleVerboseOne struct {
 
 // 证书4项 ca cert key crl
 type PluginCertManagerJson struct {
-	CA     string `json:"ca" validate:"required,base64"`
-	Cert   string `json:"cert" validate:"required,base64"`
-	Key    string `json:"key" validate:"required,base64"`
-	KeyPwd string `json:"key_pwd"`
-	Crl    string `json:"crl" validate:"omitempty,base64"`
+	CA     string `json:"ca,omitempty" validate:"omitempty,base64"`
+	Cert   string `json:"cert,omitempty" validate:"omitempty,base64"`
+	Key    string `json:"key,omitempty" validate:"omitempty,base64"`
+	KeyPwd string `json:"key_pwd,omitempty"`
+	Crl    string `json:"crl,omitempty" validate:"omitempty,base64"`
 }
 
 // ValidateStruct performs validation on the struct

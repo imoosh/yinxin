@@ -30,14 +30,22 @@ func NewServiceManager() *ServiceManager {
 // CheckStatus 检查服务状态
 func (sm *ServiceManager) CheckStatus() (bool, bool, bool, error) {
 	// 检查配置文件是否存在
-	cfgExists := false
+	cfgOk := false
+
+	//运行服务必须要有主配置文件和 证书、密钥、ca
 	if _, err := os.Stat(sm.ConfigPath); err == nil {
-		cfgExists = true
+		if _, err := os.Stat(defines.CommonCACertPath); err == nil {
+			if _, err := os.Stat(defines.CommonServerCertPath); err == nil {
+				if _, err := os.Stat(defines.CommonServerKeyPath); err == nil {
+					cfgOk = true
+				}
+			}
+		}
 	}
 
 	// 检查配置文件是否为默认配置
 	cfgIsDefault := false
-	if cfgExists { //TODO 修改检查逻辑 默认配置文件是固定的 应根据字符串比较来确定
+	if cfgOk { //TODO 修改检查逻辑 默认配置文件是固定的 应根据字符串比较来确定
 		cfgIsDefault = false //TODO
 	} else {
 		cfgIsDefault = true
@@ -51,7 +59,7 @@ func (sm *ServiceManager) CheckStatus() (bool, bool, bool, error) {
 		serviceStatus = true
 	}
 
-	return cfgIsDefault, cfgExists, serviceStatus, nil
+	return cfgIsDefault, cfgOk, serviceStatus, nil
 }
 
 // RestartService 重启服务
