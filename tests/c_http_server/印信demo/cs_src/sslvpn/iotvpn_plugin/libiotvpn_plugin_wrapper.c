@@ -67,7 +67,7 @@ void plugin_get_cert_and_other_wrapper(struct connection *cnn)
     int ret = plugin_get_cert_and_other(NULL, &out_json);
     if (ret != 0) {
         log_e("get cert and other failed");
-        jrpc_send_error(cnn, JRPC_INTERNAL_ERROR, "internal error");
+        jrpc_send_error(cnn, JRPC_INTERNAL_ERROR, out_json);
         FREE_ONCE(out_json);
         return;
     }
@@ -115,7 +115,7 @@ void plugin_set_cert_and_other_wrapper(struct connection *cnn)
     if (ret != 0) {
         log_e("set cert and other failed");
         log_e("out_json=%s", out_json);
-        jrpc_send_error(cnn, JRPC_INTERNAL_ERROR, "internal error");
+        jrpc_send_error(cnn, JRPC_INTERNAL_ERROR, out_json);
         FREE_ONCE(out_json);
         goto EXIT;
     }
@@ -136,7 +136,7 @@ void restart_sslvpn_service_wrapper(struct connection *cnn) {
     int ret = sslvpn_restart_service(NULL, &out_json);
     if (ret != 0) {
         log_e("restart sslvpn service failed");
-        jrpc_send_error(cnn, JRPC_INTERNAL_ERROR, "internal error");
+        jrpc_send_error(cnn, JRPC_INTERNAL_ERROR, out_json);
         FREE_ONCE(out_json);
         return;
     }
@@ -152,7 +152,7 @@ void get_sslvpn_status_wrapper(struct connection *cnn) {
     int ret = sslvpn_check_status(NULL, &out_json);
     if (ret != 0) {
         log_e("get sslvpn status failed");
-        jrpc_send_error(cnn, JRPC_INTERNAL_ERROR, "internal error");
+        jrpc_send_error(cnn, JRPC_INTERNAL_ERROR, out_json);
         FREE_ONCE(out_json);
         return;
     }
@@ -168,7 +168,7 @@ void get_sslvpn_config_wrapper(struct connection *cnn) {
     int ret = sslvpn_get_cfg(NULL, &out_json);
     if (ret != 0) {
         log_e("get sslvpn config failed");
-        jrpc_send_error(cnn, JRPC_INTERNAL_ERROR, "internal error");
+        jrpc_send_error(cnn, JRPC_INTERNAL_ERROR, out_json);
         FREE_ONCE(out_json);
         return;
     }
@@ -214,7 +214,7 @@ void set_sslvpn_config_wrapper(struct connection *cnn) {
     int ret = sslvpn_set_cfg(in_json, &out_json);
     if (ret != 0) {
         log_e("set sslvpn config failed");
-        jrpc_send_error(cnn, JRPC_INTERNAL_ERROR, "internal error");
+        jrpc_send_error(cnn, JRPC_INTERNAL_ERROR, out_json);
         FREE_ONCE(out_json);
         goto EXIT;
     }
@@ -265,7 +265,7 @@ void sslvpn_set_user_wrapper(struct connection *cnn) {
     int ret = sslvpn_set_user(in_json, &out_json);
     if (ret != 0) {
         log_e("set sslvpn user failed");
-        jrpc_send_error(cnn, JRPC_INTERNAL_ERROR, "internal error");
+        jrpc_send_error(cnn, JRPC_INTERNAL_ERROR, out_json);
         FREE_ONCE(out_json);
         goto EXIT;
     }
@@ -288,7 +288,7 @@ void sslvpn_get_user_wrapper(struct connection *cnn) {
     int ret = sslvpn_get_user(NULL, &out_json);
     if (ret != 0) {
         log_e("get sslvpn user failed");
-        jrpc_send_error(cnn, JRPC_INTERNAL_ERROR, "internal error");
+        jrpc_send_error(cnn, JRPC_INTERNAL_ERROR, out_json);
         FREE_ONCE(out_json);
         return;
     }
@@ -334,7 +334,7 @@ void sslvpn_set_resource_wrapper(struct connection *cnn) {
     int ret = sslvpn_set_resource(in_json, &out_json);
     if (ret != 0) {
         log_e("set sslvpn resource failed");
-        jrpc_send_error(cnn, JRPC_INTERNAL_ERROR, "internal error");
+        jrpc_send_error(cnn, JRPC_INTERNAL_ERROR, out_json);
         FREE_ONCE(out_json);
         goto EXIT;
     }
@@ -355,7 +355,7 @@ void sslvpn_get_resource_wrapper(struct connection *cnn) {
     int ret = sslvpn_get_resource(NULL, &out_json);
     if (ret != 0) {
         log_e("get sslvpn resource failed");
-        jrpc_send_error(cnn, JRPC_INTERNAL_ERROR, "internal error");
+        jrpc_send_error(cnn, JRPC_INTERNAL_ERROR, out_json);
         FREE_ONCE(out_json);
         return;
     }
@@ -401,7 +401,7 @@ void sslvpn_set_authority_wrapper(struct connection *cnn) {
     int ret = sslvpn_set_authority(in_json, &out_json);
     if (ret != 0) {
         log_e("set sslvpn authority failed");
-        jrpc_send_error(cnn, JRPC_INTERNAL_ERROR, "internal error");
+        jrpc_send_error(cnn, JRPC_INTERNAL_ERROR, out_json);
         FREE_ONCE(out_json);
         goto EXIT;
     }
@@ -422,7 +422,7 @@ void sslvpn_get_authority_wrapper(struct connection *cnn) {
     int ret = sslvpn_get_authority(NULL, &out_json);
     if (ret != 0) {
         log_e("get sslvpn authority failed");
-        jrpc_send_error(cnn, JRPC_INTERNAL_ERROR, "internal error");
+        jrpc_send_error(cnn, JRPC_INTERNAL_ERROR, out_json);
         FREE_ONCE(out_json);
         return;
     }
@@ -441,7 +441,7 @@ void nanomq_restart_service(struct connection *cnn) {
     int ret = nanomq_restart(NULL, &out_json);
     if (ret != 0) {
         log_e("restart nanomq service failed");
-		jrpc_send_error(cnn, JRPC_INTERNAL_ERROR, "internal error");
+		jrpc_send_error(cnn, JRPC_INTERNAL_ERROR, out_json);
         goto EXIT;
     }
 
@@ -459,7 +459,7 @@ void nanomq_check_status(struct connection *cnn) {
     int ret = nanomq_status(NULL, &out_json);
     if (ret != 0) {
         log_e("get nanomq status failed");
-		jrpc_send_error(cnn, JRPC_INTERNAL_ERROR, "internal error");
+		jrpc_send_error(cnn, JRPC_INTERNAL_ERROR, out_json);
         goto EXIT;
     }
 
@@ -476,7 +476,7 @@ void nanomq_get_service_config(struct connection *cnn) {
     int ret = nanomq_get_cfg(NULL, &out_json);
     if (ret != 0) {
         log_e("get nanomq config failed");
-		jrpc_send_error(cnn, JRPC_INTERNAL_ERROR, "internal error");
+		jrpc_send_error(cnn, JRPC_INTERNAL_ERROR, out_json);
         goto EXIT;
     }
 
@@ -523,7 +523,7 @@ void nanomq_set_service_config(struct connection *cnn) {
     int ret = nanomq_set_cfg(in_json, &out_json);
     if (ret != 0) {
         log_e("set nanomq config failed");
-		jrpc_send_error(cnn, JRPC_INTERNAL_ERROR, "internal error");
+		jrpc_send_error(cnn, JRPC_INTERNAL_ERROR, out_json);
         goto EXIT;
     }
 
@@ -544,7 +544,7 @@ void nanomq_get_auth_config(struct connection *cnn) {
     int ret = mqtt_auth_get_cfg(NULL, &out_json);
     if (ret != 0) {
         log_e("get mqttauth config failed");
-		jrpc_send_error(cnn, JRPC_INTERNAL_ERROR, "internal error");
+		jrpc_send_error(cnn, JRPC_INTERNAL_ERROR, out_json);
         goto EXIT;
     }
 
@@ -591,7 +591,7 @@ void nanomq_set_auth_config(struct connection *cnn) {
     int ret = mqtt_auth_set_cfg(in_json, &out_json);
     if (ret != 0) {
         log_e("set mqttauth config failed");
-		jrpc_send_error(cnn, JRPC_INTERNAL_ERROR, "internal error");
+		jrpc_send_error(cnn, JRPC_INTERNAL_ERROR, out_json);
         goto EXIT;
     }
 
@@ -648,7 +648,7 @@ void iotdevmgr_get_iot_wrapper(struct connection *cnn)
     int ret = iotdevmgr_get_iot(in_json, &out_json);
     if (ret != 0) {
         log_e("set cert and other failed");
-        jrpc_send_error(cnn, JRPC_INTERNAL_ERROR, "internal error");
+        jrpc_send_error(cnn, JRPC_INTERNAL_ERROR, out_json);
         FREE_ONCE(out_json);
         goto EXIT;
     }
@@ -700,7 +700,7 @@ void iotdevmgr_del_iot_wrapper(struct connection *cnn)
     int ret = iotdevmgr_del_iot(in_json, &out_json);
     if (ret != 0) {
         log_e("set cert and other failed");
-        jrpc_send_error(cnn, JRPC_INTERNAL_ERROR, "internal error");
+        jrpc_send_error(cnn, JRPC_INTERNAL_ERROR, out_json);
         FREE_ONCE(out_json);
         goto EXIT;
     }
