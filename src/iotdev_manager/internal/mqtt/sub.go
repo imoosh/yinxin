@@ -74,9 +74,7 @@ func (sub *MQTTSubscriber) Connection() (*autopaho.ConnectionManager, error) {
 		OnConnectionUp: func(cm *autopaho.ConnectionManager, connAck *paho.Connack) {
 			fmt.Println("mqtt connection up")
 			if _, err := cm.Subscribe(sub.ctx, &paho.Subscribe{
-				Subscriptions: []paho.SubscribeOptions{
-					{Topic: sub.cfg.Topic, QoS: sub.cfg.QoS},
-				},
+				Subscriptions: sub.cfg.Subs,
 			}); err != nil {
 				fmt.Printf("subscribe: failed to subscribe (%s). Probably due to connection drop so will retry\n", err)
 				return // likely connection has dropped
@@ -112,6 +110,75 @@ func (sub *MQTTSubscriber) Connection() (*autopaho.ConnectionManager, error) {
 	return c, nil
 }
 
+// 打印数据的十六进制表示，左侧为十六进制值，右侧为可见字符
+func PrintHex(data []byte) {
+	if len(data) == 0 {
+		return
+	}
+
+	// 每行显示16个字节
+	lineSize := 16
+
+	// 计算总共有多少行
+	lines := (len(data) + lineSize - 1) / lineSize
+
+	for i := 0; i < lines; i++ {
+		// 计算当前行的起始和结束索引
+		start := i * lineSize
+		end := start + lineSize
+		if end > len(data) {
+			end = len(data)
+		}
+		currentLineLength := end - start
+
+		// 打印偏移量（十六进制，8位）
+		fmt.Printf("%08x  ", start)
+
+		// 打印十六进制数据
+		hexCount := 0
+		for j := start; j < end; j++ {
+			fmt.Printf("%02x ", data[j])
+			hexCount++
+			
+			// 每8个字节后添加一个额外空格，增强可读性
+			if (j-start+1)%8 == 0 && j != end-1 {
+				fmt.Print(" ")
+				hexCount++ // 记录额外添加的空格
+			}
+		}
+
+		// 计算需要填充的空格数，确保右侧字符区对齐
+		// 满行16字节时，十六进制区域应有16*3 + 1 = 49个字符(包含中间空格)
+		// 前8字节后有一个额外空格
+		fullLineHexLength := 16*3 + 1 // 16个字节*3字符/字节 + 1个中间空格
+		currentHexLength := currentLineLength*3
+		if currentLineLength > 8 {
+			currentHexLength += 1 // 超过8字节时添加的中间空格
+		}
+		spacesToAdd := fullLineHexLength - currentHexLength
+		for k := 0; k < spacesToAdd; k++ {
+			fmt.Print(" ")
+		}
+
+		// 添加分隔符
+		fmt.Print(" | ")
+
+		// 打印对应的可见字符
+		for j := start; j < end; j++ {
+			b := data[j]
+			// 32-126是可打印ASCII字符
+			if b >= 32 && b <= 126 {
+				fmt.Printf("%c", b)
+			} else {
+				// 不可见字符用.表示
+				fmt.Print(".")
+			}
+		}
+
+		fmt.Println()
+	}
+}
+
 func (sub *MQTTSubscriber) Subscribe(fn SubscribeHandler) error {
 	var err error
 
@@ -122,7 +189,8 @@ waitLoop:
 			err = sub.ctx.Err()
 			break waitLoop
 		case pack := <-sub.packetChan:
-			fmt.Printf("Received Raw: topic: %s, payload: %v\n", pack.Topic, pack.Payload)
+			fmt.Printf("Received Raw: topic: %s, payload: \n", pack.Topic)
+            PrintHex(pack.Payload)
 			if fn != nil {
 				fn(pack.Topic, pack.Payload)
 			}

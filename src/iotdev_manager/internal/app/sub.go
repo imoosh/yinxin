@@ -2,7 +2,6 @@ package app
 
 import (
 	"context"
-	"fmt"
 	"iotdev_manager/internal/config"
 	"iotdev_manager/internal/logger"
 	"iotdev_manager/internal/mqtt"
@@ -52,7 +51,7 @@ func (a *SubApp) Run() error {
 	}
 
 	sub.Subscribe(func(topic string, data []byte) error {
-        fmt.Printf("SubApp 接受消息: topic: %s, %s\n", topic, string(data))
+        a.logger.Debug("SubApp 接受消息: topic: %s, %s\n", topic, string(data))
 		mqtt_msg_handle.HandleMessage(mqtt_msg_handle.TopicRegist, data)
 		return nil
 	})
