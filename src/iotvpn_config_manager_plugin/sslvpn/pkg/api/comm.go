@@ -26,22 +26,8 @@ func UserCNIsUnique(users []types.User) (bool, string, error) {
 	cnMap := make(map[string]string) // CN -> UserUUID
 
 	for _, user := range users {
-		var cn string
-
-		// 如果用户直接提供了CN，使用它
-		if user.CertCN != "" {
-			cn = user.CertCN
-		} else if user.Cert != "" {
-			// 如果用户提供了证书内容，解析CN
-			parsedCN, err := parseCNFromCert(user.Cert)
-			if err != nil {
-				return false, "", fmt.Errorf("failed to parse CN from certificate for user %s: %v", user.Name, err)
-			}
-			cn = parsedCN
-		} else {
-			// 跳过没有证书信息的用户
-			continue
-		}
+		// CertCN现在是必填字段，直接使用它
+		cn := user.CertCN
 
 		// 检查CN是否重复
 		if existingUserUUID, exists := cnMap[cn]; exists {
@@ -118,40 +104,6 @@ func CleanupFirewall() error {
 	if firewallManager != nil {
 		return firewallManager.Cleanup()
 	}
-	return nil
-}
-
-// 获取用户的有效CN（优先使用CertCN，其次解析Cert）
-func GetUserEffectiveCN(user types.User) (string, error) {
-	if user.CertCN != "" {
-		return user.CertCN, nil
-	}
-
-	if user.Cert != "" {
-		return parseCNFromCert(user.Cert)
-	}
-
-	return "", fmt.Errorf("user %s has no certificate information", user.Name)
-}
-
-// 为用户设置有效的CN（在SetUser时调用）
-func SetUserEffectiveCN(user *types.User) error {
-	if user.CertCN != "" {
-		// 如果已经有CN，不需要处理
-		return nil
-	}
-
-	if user.Cert != "" {
-		// 从证书中解析CN
-		cn, err := parseCNFromCert(user.Cert)
-		if err != nil {
-			return fmt.Errorf("failed to parse CN from certificate: %v", err)
-		}
-		user.CertCN = cn
-		// 清空证书内容，内部不保存
-		user.Cert = ""
-	}
-
 	return nil
 }
 

@@ -242,13 +242,6 @@ func SetUser(input string) (*types.BaseResponse, error) {
 		}
 	}
 
-	// 处理用户证书信息：从证书中解析CN，清空证书内容
-	for i := range users {
-		if err := SetUserEffectiveCN(&users[i]); err != nil {
-			return newErrorResponse(error_def.ErrInvalidCert, fmt.Sprintf("failed to process certificate for user %s: %v", users[i].Name, err)), nil
-		}
-	}
-
 	// 验证用户数据完整性（包括CN重复检查）
 	if err := ValidateUsers(users); err != nil {
 		return newErrorResponse(error_def.ErrInvalidParam, fmt.Sprintf("user validation failed: %v", err)), nil

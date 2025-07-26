@@ -62,8 +62,7 @@ type User struct {
 	UUID     string `json:"uuid" validate:"required,uuid"`
 	Name     string `json:"name" validate:"required"`
 	Enable   bool   `json:"enable"`
-	Cert     string `json:"cert" validate:"omitempty,base64"`         //如果用户输入证书内容， 则解析成CN. 内部不保存， 查询时 只返回CertDN
-	CertCN   string `json:"cert_CN" validate:"required_without=Cert"` //用户也可能直接输入证书CN
+	CertCN   string `json:"cert_CN" validate:"required"` //用户也可能直接输入证书CN
 	PhoneNum string `json:"phone_num" validate:"omitempty"`
 	BindIP   string `json:"bind_ip" validate:"omitempty,ipv4"`
 }
