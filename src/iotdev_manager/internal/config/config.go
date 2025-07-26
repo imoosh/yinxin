@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/eclipse/paho.golang/paho"
 	"gopkg.in/yaml.v3"
 )
 
@@ -31,6 +32,11 @@ type LogConfig struct {
 	Console bool   `yaml:"console"`
 }
 
+type PubConfig struct {
+	Topic string `json:"topic"`
+	QoS   byte   `json:"qos"`
+}
+
 type MQTTConfig struct {
 	Broker string `yaml:"broker"`
 	TLS    struct {
@@ -39,14 +45,14 @@ type MQTTConfig struct {
 		ClientCert string `yaml:"clientCert"`
 		ClientKey  string `yaml:"clientKey"`
 	} `yaml:"tls"`
-	Topic                string `yaml:"topic"`
-	ClientID             string `yaml:"clientID"`
-	Username             string `yaml:"username"`
-	Password             string `yaml:"password"`
-	QoS                  byte   `yaml:"qos"`
-	KeepAlive            int    `yaml:"keepAlive"`
-	ReconnectInterval    int    `yaml:"reconnectInterval"`
-	MaxReconnectAttempts int    `yaml:"maxReconnectAttempts"`
+	Pub                  PubConfig               `json:"pub"`
+	Subs                 []paho.SubscribeOptions `json:"subs"`
+	ClientID             string                  `yaml:"clientID"`
+	Username             string                  `yaml:"username"`
+	Password             string                  `yaml:"password"`
+	KeepAlive            int                     `yaml:"keepAlive"`
+	ReconnectInterval    int                     `yaml:"reconnectInterval"`
+	MaxReconnectAttempts int                     `yaml:"maxReconnectAttempts"`
 }
 
 // LoadConfig 从指定路径加载配置文件

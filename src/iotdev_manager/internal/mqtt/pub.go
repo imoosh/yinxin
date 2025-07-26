@@ -140,8 +140,8 @@ func (pub *MQTTPublisher) Connection() (*autopaho.ConnectionManager, error) {
 func (pub *MQTTPublisher) Publish(data []byte) error {
 	err := pub.cm.PublishViaQueue(pub.ctx, &autopaho.QueuePublish{
 		Publish: &paho.Publish{
-			QoS:     pub.cfg.QoS,
-			Topic:   pub.cfg.Topic,
+			QoS:     pub.cfg.Pub.QoS,
+			Topic:   pub.cfg.Pub.Topic,
 			Payload: data,
 		}})
 	if err != nil {
