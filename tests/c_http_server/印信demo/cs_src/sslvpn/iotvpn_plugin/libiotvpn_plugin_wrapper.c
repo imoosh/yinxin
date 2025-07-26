@@ -97,7 +97,10 @@ void plugin_set_cert_and_other_wrapper(struct connection *cnn)
     if (body == NULL) {
         return;
     }
-    //ascii_dump("Body", (char* )body->at, body->len);
+
+    printf("body->len=%ld\n", body->len);
+    ascii_dump("Body (max 300)", (char* )body->at, body->len>300?300:body->len);
+
 
     cJSON *root = cJSON_ParseWithLength(body->at, body->len);
     if (root == NULL) {

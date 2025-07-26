@@ -148,19 +148,19 @@ int main(int argc, char **argv)
 	route_register(srv, "/login", login);
 
 	//sslvpn测试
-	route_register(srv, "/ccm/v1/manage/sslvpn/restart-service", restart_sslvpn_service_wrapper);
-	route_register(srv, "/ccm/v1/manage/sslvpn/check-status", get_sslvpn_status_wrapper);
-	route_register(srv, "/ccm/v1/manage/sslvpn/get-cfg", get_sslvpn_config_wrapper);
-	route_register(srv, "/ccm/v1/manage/sslvpn/set-cfg", set_sslvpn_config_wrapper);
-	route_register(srv, "/ccm/v1/manage/sslvpn/set-user", sslvpn_set_user_wrapper);
-	route_register(srv, "/ccm/v1/manage/sslvpn/get-user", sslvpn_get_user_wrapper);
-	route_register(srv, "/ccm/v1/manage/sslvpn/set-resource", sslvpn_set_resource_wrapper);
-	route_register(srv, "/ccm/v1/manage/sslvpn/get-resource", sslvpn_get_resource_wrapper);
-	route_register(srv, "/ccm/v1/manage/sslvpn/set-authority", sslvpn_set_authority_wrapper);
-	route_register(srv, "/ccm/v1/manage/sslvpn/get-authority", sslvpn_get_authority_wrapper);
+	route_register(srv, "/ccm/v1/manage/sslvpn/restartservice", restart_sslvpn_service_wrapper);
+	route_register(srv, "/ccm/v1/manage/sslvpn/check_status", get_sslvpn_status_wrapper);
+	route_register(srv, "/ccm/v1/manage/sslvpn/get_cfg", get_sslvpn_config_wrapper);
+	route_register(srv, "/ccm/v1/manage/sslvpn/set_cfg", set_sslvpn_config_wrapper);
+	route_register(srv, "/ccm/v1/manage/sslvpn/set_user", sslvpn_set_user_wrapper);
+	route_register(srv, "/ccm/v1/manage/sslvpn/get_user", sslvpn_get_user_wrapper);
+	route_register(srv, "/ccm/v1/manage/sslvpn/set_resource", sslvpn_set_resource_wrapper);
+	route_register(srv, "/ccm/v1/manage/sslvpn/get_resource", sslvpn_get_resource_wrapper);
+	route_register(srv, "/ccm/v1/manage/sslvpn/set_authority", sslvpn_set_authority_wrapper);
+	route_register(srv, "/ccm/v1/manage/sslvpn/get_authority", sslvpn_get_authority_wrapper);
 
-	route_register(srv, "/ccm/v1/manage/plugin/set-cert", plugin_set_cert_and_other_wrapper);
-	route_register(srv, "/ccm/v1/manage/plugin/get-cert", plugin_get_cert_and_other_wrapper);
+	route_register(srv, "/ccm/v1/manage/plugin/set_cert", plugin_set_cert_and_other_wrapper);
+	route_register(srv, "/ccm/v1/manage/plugin/get_cert", plugin_get_cert_and_other_wrapper);
 
 
 	route_register(srv, "/ccm/v1/manage/nanomq/restart_service", nanomq_restart_service);
@@ -172,8 +172,8 @@ int main(int argc, char **argv)
 
 
 
-	route_register(srv, "/iotdevmgr/get_iot", iotdevmgr_get_iot_wrapper);
-    route_register(srv, "/iotdevmgr/det_iot", iotdevmgr_del_iot_wrapper);
+	route_register(srv, "/ccm/v1/manage/iot/get_iot", iotdevmgr_get_iot_wrapper);
+    route_register(srv, "/ccm/v1/manage/iot/del_iot", iotdevmgr_del_iot_wrapper);
 
 
 
